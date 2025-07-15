@@ -8,8 +8,6 @@ configurationFiles:
 # Build configuration
 build:
   timeout: 1800  # 30 minutes, for larger builds
-  args:
-    NODE_ENV: "production"
 
 # Environment-specific settings
 environments:
@@ -19,17 +17,25 @@ environments:
       memory: 2Gi
       replicas: 1
     services:
-      api:
+      redmica:
         resources:
           cpu: 1
           memory: 1Gi
-      frontend:
+      postgres:
         resources:
           cpu: 0.5
+          memory: 1Gi
+      ldap:
+        resources:
+          cpu: 0.2
+          memory: 256Mi
+      prometheus:
+        resources:
+          cpu: 0.3
           memory: 512Mi
-      worker:
+      grafana:
         resources:
-          cpu: 0.5
+          cpu: 0.3
           memory: 512Mi
 
   # Production environment with higher resources
@@ -39,33 +45,74 @@ environments:
       memory: 4Gi
       replicas: 2
     services:
-      api:
+      redmica:
         resources:
           cpu: 2
           memory: 2Gi
         replicas: 2
-      frontend:
+      postgres:
+        resources:
+          cpu: 1
+          memory: 2Gi
+        replicas: 1  # Primary DB - replication handled separately
+      ldap:
+        resources:
+          cpu: 0.5
+          memory: 512Mi
+        replicas: 2
+      prometheus:
         resources:
           cpu: 1
           memory: 1Gi
-        replicas: 2
-      worker:
+        replicas: 1
+      grafana:
         resources:
-          cpu: 1
+          cpu: 0.5
           memory: 1Gi
-        replicas: 2
+        replicas: 1
 
 # Health check configuration
 healthChecks:
-  api:
-    path: /health
-    port: 3000
-  frontend:
+  redmica:
     path: /
-    port: 80
+    port: 3000
+  postgres:
+    port: 5432
+    tcp: true
+  ldap:
+    port: 389
+    tcp: true
+  prometheus:
+    path: /-/healthy
+    port: 9090
+  grafana:
+    path: /api/health
+    port: 3001
+
+# Data persistence configuration
+persistence:
+  postgres:
+    size: 10Gi
+    storageClass: "standard"
+  redmica:
+    size: 5Gi
+    storageClass: "standard"
+  ldap:
+    size: 1Gi
+    storageClass: "standard"
+  prometheus:
+    size: 5Gi
+    storageClass: "standard"
+  grafana:
+    size: 1Gi
+    storageClass: "standard"
 
 # Custom domain configuration
 domains:
   production:
     - domain: redstone.example.com
-      service: frontend
+      service: redmica
+    - domain: grafana.redstone.example.com
+      service: grafana
+    - domain: prometheus.redstone.example.com
+      service: prometheus
