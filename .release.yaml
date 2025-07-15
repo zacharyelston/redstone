@@ -1,0 +1,71 @@
+# Redstone Release.com Configuration
+# Following the "Built for Clarity" design philosophy
+
+# Define which locations to look for configuration files
+configurationFiles:
+  dockerComposePath: ./docker-compose.yml
+
+# Build configuration
+build:
+  timeout: 1800  # 30 minutes, for larger builds
+  args:
+    NODE_ENV: "production"
+
+# Environment-specific settings
+environments:
+  default:
+    resources:
+      cpu: 1
+      memory: 2Gi
+      replicas: 1
+    services:
+      api:
+        resources:
+          cpu: 1
+          memory: 1Gi
+      frontend:
+        resources:
+          cpu: 0.5
+          memory: 512Mi
+      worker:
+        resources:
+          cpu: 0.5
+          memory: 512Mi
+
+  # Production environment with higher resources
+  production:
+    resources:
+      cpu: 2
+      memory: 4Gi
+      replicas: 2
+    services:
+      api:
+        resources:
+          cpu: 2
+          memory: 2Gi
+        replicas: 2
+      frontend:
+        resources:
+          cpu: 1
+          memory: 1Gi
+        replicas: 2
+      worker:
+        resources:
+          cpu: 1
+          memory: 1Gi
+        replicas: 2
+
+# Health check configuration
+healthChecks:
+  api:
+    path: /health
+    port: 3000
+  frontend:
+    path: /
+    port: 80
+
+# Custom domain configuration
+domains:
+  production:
+    - domain: redstone.example.com
+      service: frontend
