@@ -1,67 +1,110 @@
-version: "3"
+version: "3.8"
 
 services:
-  # Frontend application (React)
-  frontend:
-    build:
-      context: ./components/frontend
-      dockerfile: Dockerfile
-    ports:
-      - "8080:80"
+  # PostgreSQL database for Redmica
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-15}
     environment:
-      - NODE_ENV=production
-      - API_URL=http://api:3000
-    depends_on:
-      - api
-    restart: unless-stopped
-
-  # API service (Node.js/Express)
-  api:
-    build:
-      context: ./components/api
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/redstone
-      - REDIS_URL=redis://redis:6379
-      - LOG_LEVEL=info
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
-  # Background worker service
-  worker:
-    build:
-      context: ./components/worker
-      dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/redstone
-      - REDIS_URL=redis://redis:6379
-      - LOG_LEVEL=info
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
-  # PostgreSQL database
-  db:
-    image: postgres:14-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=redstone
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: postgres
+      POSTGRES_DB: redmica_production
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - ./storage/postgres:/var/lib/postgresql/data
+      - ./components/postgres/config:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redmica - Redmine fork for project management
+  redmica:
+    image: redmica/redmica:${REDMICA_VERSION:-3.1.7}
+    environment:
+      REDMINE_DB_POSTGRES: postgres
+      REDMINE_DB_USERNAME: postgres
+      REDMINE_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SECRET_KEY_BASE: ${REDMICA_SECRET_KEY_BASE:-changemeinproduction}
+      REDMINE_PLUGINS_MIGRATE: 'true'
+    volumes:
+      - ./storage/redmica/files:/usr/src/redmine/files
+      - ./storage/redmica/plugins:/usr/src/redmine/plugins
+      - ./components/redmica/config:/usr/src/redmine/config/configuration.yml.d
+    ports:
+      - "${REDMICA_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - redstone-network
+
+  # LDAP service for authentication
+  ldap:
+    image: osixia/openldap:1.5.0
+    command: --copy-service
+    volumes:
+      - ./storage/ldap/data:/var/lib/ldap
+      - ./storage/ldap/config:/etc/ldap/slapd.d
+      - ./components/ldap/config/users.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/users.ldif
+    environment:
+      - LDAP_ORGANISATION=Redstone Project
+      - LDAP_DOMAIN=redstone.local
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-admin}
+      - LDAP_CONFIG_PASSWORD=${LDAP_CONFIG_PASSWORD:-config}
+      - LDAP_TLS=false
+      - LDAP_READONLY_USER=false
+      - LDAP_REPLICATION=false
+      - KEEP_EXISTING_CONFIG=false
+      - LDAP_REMOVE_CONFIG_AFTER_SETUP=true
+      - BOOTSTRAP=true
+    ports:
+      - "389:389"
+      - "636:636"
+    networks:
+      - redstone-network
     restart: unless-stopped
 
-  # Redis for caching and message queue
-  redis:
-    image: redis:7-alpine
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-9.5.2}
+    volumes:
+      - ./storage/grafana:/var/lib/grafana
+      - ./components/monitoring/grafana:/etc/grafana/provisioning
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    networks:
+      - redstone-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION:-v2.44.0}
+    volumes:
+      - ./storage/prometheus:/prometheus
+      - ./components/monitoring/prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - redstone-network
     restart: unless-stopped
 
-volumes:
-  db-data:
+networks:
+  redstone-network:
+    driver: bridge
+
+# No longer need named volumes since we're using local directories for persistence

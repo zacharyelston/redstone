@@ -1,0 +1,27 @@
+# Redmica configuration
+# This configuration extends the default settings
+
+production:
+  email_delivery:
+    delivery_method: :smtp
+    smtp_settings:
+      address: smtp.example.com
+      port: 587
+      authentication: :login
+      user_name: redmica@example.com
+      password: <%= ENV['SMTP_PASSWORD'] %>
+      enable_starttls_auto: true
+
+  # LDAP authentication settings
+  ldap:
+    enabled: true
+    host: ldap
+    port: 389
+    account: uid=admin,dc=redstone,dc=local
+    account_password: <%= ENV['LDAP_ADMIN_PASSWORD'] || 'adminpassword' %>
+    base_dn: ou=users,dc=redstone,dc=local
+    onthefly_register: true
+    attr_login: uid
+    attr_firstname: givenName
+    attr_lastname: sn
+    attr_mail: mail

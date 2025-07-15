@@ -12,6 +12,10 @@ yarn-error.log
 .env.test.local
 .env.production.local
 
+# Storage
+storage/
+storage-mounts/
+
 # Logs
 logs
 *.log
