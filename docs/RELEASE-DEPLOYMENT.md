@@ -54,31 +54,43 @@ As shown in the Release.com UI, follow these steps to deploy via a Git pull requ
 
 - You need to create or select a branch first - PRs cannot be created directly to main
 - Your changes must be committed to your branch before creating a PR
-- Use the `application-template.yaml` and `env-template` files as starting points for your configuration
+- Use the configuration files in the `.release` directory as starting points
 
 ## Configuration Files
 
-The Redstone project includes two key template files for Release.com deployment:
+The Redstone project includes the following template files in the `.release` directory:
 
-1. **application-template.yaml**: Defines the application structure, resources, and health checks
-2. **env-template**: Contains environment variables with placeholders for secret values
+1. **application_template.yaml**: Defines the application structure, resources, and health checks
+2. **environment_template.yaml**: Configures environment-specific settings for services
+3. **service_template.yaml**: Provides template for individual microservice configuration
+4. **variables.yaml**: Contains all variables with descriptions and default values
 
 When deploying, you should:
 
-1. Make a copy of the `application-template.yaml` file as needed
-2. Create an environment-specific version of `env-template` and replace placeholders with actual values
+1. Create your environment configuration based on the templates
+2. Replace variable placeholders with actual values (especially secret values)
 3. Never commit secret values to the repository
 
-## Environment Variables
+## Directory Structure
 
-Secret values in the `env-template` file are marked with double underscores (e.g., `__POSTGRES_PASSWORD__`). Replace these with actual values when deploying, or configure them in the Release.com environment settings.
+```
+.release/
+├── application_template.yaml  # Application structure and shared resources
+├── environment_template.yaml  # Environment-specific configurations
+├── service_template.yaml      # Optional template for microservices
+└── variables.yaml            # Variable definitions with defaults
+```
+
+## Variable Substitution
+
+Variables in the templates are marked with `${VARIABLE_NAME}` syntax. Secret values should be managed through Release.com secrets or environment variables.
 
 ## Troubleshooting
 
 If you encounter issues during deployment:
 
 1. Check the Release.com logs for specific error messages
-2. Verify that all required environment variables are properly set
+2. Verify that all required variables are properly set in your environment
 3. Ensure that resource allocations match the requirements of your environment
 4. Check that health check endpoints are correctly configured and accessible
 
