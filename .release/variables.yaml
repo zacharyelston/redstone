@@ -1,0 +1,129 @@
+# Redstone Variables Template for Release.com
+# Following the "Built for Clarity" design philosophy
+
+variables:
+  # Environment configuration
+  - name: ENVIRONMENT_NAME
+    description: Name of the environment
+    required: true
+    defaultValue: development
+    
+  - name: ENVIRONMENT_TYPE
+    description: Type of environment (development, staging, production)
+    required: true
+    defaultValue: development
+    
+  - name: ENVIRONMENT_DESCRIPTION
+    description: Description of the environment
+    required: false
+    defaultValue: Development environment for Redstone project
+    
+  # PostgreSQL configuration
+  - name: POSTGRES_USER
+    description: PostgreSQL database username
+    required: true
+    defaultValue: postgres
+    
+  - name: POSTGRES_PASSWORD
+    description: PostgreSQL database password
+    required: true
+    secret: true
+    
+  - name: POSTGRES_DB
+    description: PostgreSQL database name
+    required: true
+    defaultValue: redmica
+    
+  # Redmica configuration
+  - name: REDMICA_REPLICAS
+    description: Number of Redmica replicas
+    required: false
+    defaultValue: "1"
+    
+  - name: REDMINE_DB_DATABASE
+    description: Redmica database name
+    required: true
+    defaultValue: redmica
+    
+  - name: REDMINE_DB_USERNAME
+    description: Redmica database username
+    required: true
+    defaultValue: postgres
+    
+  - name: REDMINE_SECRET_KEY_BASE
+    description: Secret key base for Rails
+    required: true
+    secret: true
+    
+  - name: REDMICA_HOST
+    description: Hostname for Redmica
+    required: true
+    defaultValue: redstone.local
+    
+  # LDAP configuration
+  - name: LDAP_DOMAIN
+    description: LDAP domain
+    required: true
+    defaultValue: redstone.local
+    
+  - name: LDAP_ORGANISATION
+    description: LDAP organization name
+    required: true
+    defaultValue: Redstone Project
+    
+  - name: LDAP_ADMIN_PASSWORD
+    description: LDAP admin password
+    required: true
+    secret: true
+    
+  - name: LDAP_CONFIG_PASSWORD
+    description: LDAP config password
+    required: true
+    secret: true
+    
+  # Monitoring configuration
+  - name: GF_ADMIN_USER
+    description: Grafana admin username
+    required: true
+    defaultValue: admin
+    
+  - name: GF_ADMIN_PASSWORD
+    description: Grafana admin password
+    required: true
+    secret: true
+    
+  - name: GRAFANA_HOST
+    description: Hostname for Grafana
+    required: true
+    defaultValue: redstone.local
+    
+  - name: PROMETHEUS_HOST
+    description: Hostname for Prometheus
+    required: true
+    defaultValue: redstone.local
+    
+  # Storage configuration
+  - name: STORAGE_CLASS
+    description: Storage class for persistent volumes
+    required: false
+    defaultValue: standard
+    
+  - name: POSTGRES_STORAGE_SIZE
+    description: Storage size for PostgreSQL
+    required: false
+    defaultValue: 10Gi
+    
+  - name: LDAP_STORAGE_SIZE
+    description: Storage size for LDAP
+    required: false
+    defaultValue: 1Gi
+    
+  - name: GRAFANA_STORAGE_SIZE
+    description: Storage size for Grafana
+    required: false
+    defaultValue: 1Gi
+    
+  - name: PROMETHEUS_STORAGE_SIZE
+    description: Storage size for Prometheus
+    required: false
+    defaultValue: 5Gi
