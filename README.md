@@ -1,5 +1,5 @@
 # Redstone
-
+![Redstone Architecture Diagram](docs/redstone-diagram.png)
 A modular, cloud-native application designed for flexible deployment on AWS EKS and Release.com.
 
 ## Overview

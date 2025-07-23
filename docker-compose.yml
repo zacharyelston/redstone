@@ -103,6 +103,97 @@ services:
       - redstone-network
     restart: unless-stopped
 
+  # Frontend - Nginx reverse proxy
+  frontend:
+    image: nginx:${NGINX_VERSION:-1.25-alpine}
+    volumes:
+      - ./components/frontend/config/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - redmica
+      - api
+      - grafana
+      - prometheus
+    networks:
+      - redstone-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Service - Flask application
+  api:
+    build:
+      context: ./components/api
+      dockerfile: Dockerfile
+    environment:
+      - DEBUG=${API_DEBUG:-false}
+      - API_SECRET_KEY=${API_SECRET_KEY:-dev-secret-key}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/redmica_production
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    volumes:
+      - ./components/api/config:/app
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - redstone-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Background Worker Service
+  worker:
+    build:
+      context: ./components/worker
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - WORKER_ID=${WORKER_ID:-worker-1}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/redmica_production
+    volumes:
+      - ./components/worker/config:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - redstone-network
+    restart: unless-stopped
+    deploy:
+      replicas: ${WORKER_REPLICAS:-1}
+
+  # Redis - Cache and message queue
+  redis:
+    image: redis:${REDIS_VERSION:-7-alpine}
+    volumes:
+      - ./storage/redis:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - redstone-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
 networks:
   redstone-network:
     driver: bridge
