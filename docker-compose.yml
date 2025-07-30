@@ -1,201 +1,570 @@
-version: "3.8"
+# Redstone - Complete Project Management & Monitoring Stack
+# Following the "Built for Clarity" design philosophy
 
 services:
-  # PostgreSQL database for Redmica
+  # === CORE DATA SERVICES ===
+  
+  # PostgreSQL - Primary database for Redmica
   postgres:
-    image: postgres:${POSTGRES_VERSION:-15}
+    image: postgres:${POSTGRES_VERSION:-15-alpine}
+    container_name: redstone-postgres
+    profiles: ["core", "production", "development", "testing"]
+    labels:
+      - "service=postgres"
+      - "logging=enabled"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service"
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # Using fixed password for testing (will be for initial setup only)
+      POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: redmica_production
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      # LDAP configuration for PostgreSQL
+      LDAP_SERVER: lldap
+      LDAP_PORT: ${LDAP_PORT:-3890}
+      LDAP_BASE_DN: ${LDAP_BASE_DN:-dc=redstone,dc=local}
+      LDAP_BIND_DN: cn=admin,${LDAP_BASE_DN:-dc=redstone,dc=local}
+      LDAP_BIND_PASSWORD: ${LDAP_ADMIN_PASSWORD:-adminpass}
     volumes:
-      - ./storage/postgres:/var/lib/postgresql/data
-      - ./components/postgres/config:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+      - ./components/postgres/config:/docker-entrypoint-initdb.d:ro
+      - ./components/postgres/ldap-config:/etc/postgresql/ldap-config:ro
+      - ./components/postgres/ldap-config/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+    depends_on:
+      lldap:
+        condition: service_started
     restart: unless-stopped
     networks:
       - redstone-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d redmica_production"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
 
-  # Redmica - Redmine fork for project management
-  redmica:
-    image: redmica/redmica:${REDMICA_VERSION:-3.1.7}
+  # Flyway - Database migrations
+  flyway:
+    build:
+      context: ./components/flyway
+      dockerfile: Dockerfile
+    container_name: redstone-flyway
     environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - redstone-network
+    profiles:
+      - migration
+    volumes:
+      - ./components/flyway/sql:/flyway/sql:ro
+      - ./components/flyway/conf:/flyway/conf:ro
+
+  # Test Runner - Containerized testing environment
+  test-runner:
+    profiles: ["testing"]
+    build:
+      context: ./components/test-runner
+      dockerfile: Dockerfile
+    container_name: redstone-test-runner
+    depends_on:
+      redmica:
+        condition: service_started
+      lldap:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    networks:
+      - redstone-network
+    volumes:
+      - ./test-results:/app/test-results
+      - ./components/test-runner/config:/app/config
+    environment:
+      - REDMICA_URL=http://redmica:3000
+      - LDAP_HOST=lldap
+      - LDAP_PORT=389
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=redmica_production
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  ldap-test:
+    profiles: ["testing"]
+    build:
+      context: ./components/ldap-test
+      dockerfile: Dockerfile
+    container_name: redstone-ldap-test
+    depends_on:
+      lldap:
+        condition: service_started
+    networks:
+      - redstone-network
+    volumes:
+      - ./test-results:/tests/results
+
+  # Redis - Cache and session store
+  redis:
+    image: redis:${REDIS_VERSION:-7-alpine}
+    container_name: redstone-redis
+    profiles: ["core", "production", "development", "testing"]
+    labels:
+      - "service=redis"
+      - "logging=enabled"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis}
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-redis}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+
+  # === AUTHENTICATION & DIRECTORY ===
+  
+  # OpenLDAP - Directory service for authentication
+  lldap:
+    image: lldap/lldap:${LLDAP_VERSION:-stable}
+    container_name: redstone-lldap
+    profiles: ["auth", "production", "development", "testing"]
+    labels:
+      - "service=lldap"
+      - "logging=enabled"
+    environment:
+      # Core LLDAP configuration
+      LLDAP_JWT_SECRET: ${LLDAP_JWT_SECRET:-changemeinproduction}
+      LLDAP_KEY_SEED: ${LLDAP_KEY_SEED:-changemeinproduction}
+      LLDAP_LDAP_BASE_DN: ${LDAP_BASE_DN:-dc=redstone,dc=local}
+      # Admin user configuration
+      LLDAP_LDAP_USER_DN: admin
+      LLDAP_LDAP_USER_PASS: ${LDAP_ADMIN_PASSWORD:-admin}
+      # HTTP server configuration
+      LLDAP_HTTP_HOST: 0.0.0.0
+      LLDAP_HTTP_PORT: 17170
+      # LDAP server configuration
+      LLDAP_LDAP_HOST: 0.0.0.0
+      LLDAP_LDAP_PORT: 3890
+      # Database configuration
+      LLDAP_DATABASE_URL: sqlite:///data/users.db?mode=rwc
+      # Timezone
+      TZ: ${TZ:-UTC}
+    volumes:
+      - lldap_data:/data
+      - ./components/lldap/config:/config:ro
+    ports:
+      - "${LLDAP_HTTP_PORT:-17170}:17170"  # Web UI
+      - "${LDAP_PORT:-3890}:3890"          # LDAP
+    networks:
+      - redstone-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:17170"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+
+  # === CORE APPLICATION ===
+  
+  # Redmica - Main project management application
+  redmica:
+    image: redmica/redmica:${REDMICA_VERSION:-3.0.0}
+    container_name: redstone-redmica
+    profiles: ["application", "production", "development", "testing"]
+    labels:
+      - "service=redmica"
+      - "logging=enabled"
+      - "logging.service=redmica"
+      - "logging.component=project-management"
+      - "logging.stack=redstone"
+    environment:
+      # Database configuration using LDAP-authenticated service user
       REDMINE_DB_POSTGRES: postgres
-      REDMINE_DB_USERNAME: postgres
-      REDMINE_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      REDMINE_DB_USERNAME: redmica_service
+      REDMINE_DB_PASSWORD: redmica123
+      REDMINE_DB_DATABASE: redmica_production
+      # Schema configuration for dedicated schema
+      REDMINE_DB_SCHEMA: redmica
       SECRET_KEY_BASE: ${REDMICA_SECRET_KEY_BASE:-changemeinproduction}
       REDMINE_PLUGINS_MIGRATE: 'true'
+      RAILS_ENV: production
+      # Enable stdout logging for container logs
+      RAILS_LOG_TO_STDOUT: 'true'
+      # LDAP Configuration
+      REDMINE_LDAP_HOST: lldap
+      REDMINE_LDAP_PORT: 389
+      REDMINE_LDAP_BASE_DN: ${LDAP_BASE_DN:-dc=redstone,dc=local}
+      # Redis Configuration
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis}@redis:6379/0
     volumes:
-      - ./storage/redmica/files:/usr/src/redmine/files
-      - ./storage/redmica/plugins:/usr/src/redmine/plugins
-      - ./components/redmica/config:/usr/src/redmine/config/configuration.yml.d
+      - redmica_files:/usr/src/redmine/files
+      - redmica_plugins:/usr/src/redmine/plugins
+      - ./components/redmica/config:/usr/src/redmine/config/configuration.yml.d:ro
     ports:
       - "${REDMICA_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      lldap:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+
+
+
+  # === MONITORING STACK ===
+  
+  # Node Exporter - System and container metrics
+  node-exporter:
+    image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.6.1}
+    container_name: redstone-node-exporter
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+
+  # PostgreSQL Exporter - Database metrics
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:${POSTGRES_EXPORTER_VERSION:-v0.13.2}
+    container_name: redstone-postgres-exporter
+    profiles: ["monitoring", "production", "development"]
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/redmica_production?sslmode=disable"
+      PG_EXPORTER_AUTO_DISCOVER_DATABASES: 'true'
+    ports:
+      - "${POSTGRES_EXPORTER_PORT:-9187}:9187"
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
     networks:
       - redstone-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
 
-  # LDAP service for authentication
-  ldap:
-    image: osixia/openldap:1.5.0
-    command: --copy-service
-    volumes:
-      - ./storage/ldap/data:/var/lib/ldap
-      - ./storage/ldap/config:/etc/ldap/slapd.d
-      - ./components/ldap/config/users.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/users.ldif
+  # Redis Exporter - Cache metrics
+  redis-exporter:
+    image: oliver006/redis_exporter:${REDIS_EXPORTER_VERSION:-v1.54.0}
+    container_name: redstone-redis-exporter
+    profiles: ["monitoring", "production", "development"]
     environment:
-      - LDAP_ORGANISATION=Redstone Project
-      - LDAP_DOMAIN=redstone.local
-      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-admin}
-      - LDAP_CONFIG_PASSWORD=${LDAP_CONFIG_PASSWORD:-config}
-      - LDAP_TLS=false
-      - LDAP_READONLY_USER=false
-      - LDAP_REPLICATION=false
-      - KEEP_EXISTING_CONFIG=false
-      - LDAP_REMOVE_CONFIG_AFTER_SETUP=true
-      - BOOTSTRAP=true
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
     ports:
-      - "389:389"
-      - "636:636"
-    networks:
-      - redstone-network
-    restart: unless-stopped
-
-  # Monitoring - Grafana
-  grafana:
-    image: grafana/grafana:${GRAFANA_VERSION:-9.5.2}
-    volumes:
-      - ./storage/grafana:/var/lib/grafana
-      - ./components/monitoring/grafana:/etc/grafana/provisioning
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_USERS_ALLOW_SIGN_UP: "false"
-    ports:
-      - "${GRAFANA_PORT:-3001}:3000"
-    networks:
-      - redstone-network
-    restart: unless-stopped
+      - "${REDIS_EXPORTER_PORT:-9121}:9121"
     depends_on:
-      - prometheus
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
 
-  # Monitoring - Prometheus
-  prometheus:
-    image: prom/prometheus:${PROMETHEUS_VERSION:-v2.44.0}
+  # Blackbox Exporter - HTTP/TCP endpoint monitoring
+  blackbox-exporter:
+    image: prom/blackbox-exporter:${BLACKBOX_EXPORTER_VERSION:-v0.24.0}
+    container_name: redstone-blackbox-exporter
+    command:
+      - '--config.file=/config/blackbox.yml'
     volumes:
-      - ./storage/prometheus:/prometheus
-      - ./components/monitoring/prometheus:/etc/prometheus
+      - ./components/blackbox-exporter:/config:ro
+    ports:
+      - "${BLACKBOX_EXPORTER_PORT:-9115}:9115"
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+
+  # cAdvisor - Container metrics (already exists, just moving it here)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:${CADVISOR_VERSION:-v0.47.2}
+    container_name: redstone-cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "${CADVISOR_PORT:-8080}:8080"
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    privileged: true
+    devices:
+      - /dev/kmsg
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+
+  # Prometheus - Metrics collection and alerting
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION:-v2.47.0}
+    container_name: redstone-prometheus
+    profiles: ["monitoring", "production", "development"]
+    labels:
+      - "service=prometheus"
+      - "logging=enabled"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--storage.tsdb.retention.time=30d'
+    volumes:
+      - prometheus_data:/prometheus
+      - ./components/prometheus/config:/etc/prometheus:ro
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
+    restart: unless-stopped
     networks:
       - redstone-network
-    restart: unless-stopped
-
-  # Frontend - Nginx reverse proxy
-  frontend:
-    image: nginx:${NGINX_VERSION:-1.25-alpine}
-    volumes:
-      - ./components/frontend/config/nginx.conf:/etc/nginx/conf.d/default.conf
-    ports:
-      - "${FRONTEND_PORT:-8080}:80"
-    depends_on:
-      - redmica
-      - api
-      - grafana
-      - prometheus
-    networks:
-      - redstone-network
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # API Service - Flask application
-  api:
-    build:
-      context: ./components/api
-      dockerfile: Dockerfile
-    environment:
-      - DEBUG=${API_DEBUG:-false}
-      - API_SECRET_KEY=${API_SECRET_KEY:-dev-secret-key}
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/redmica_production
-      - REDIS_URL=redis://redis:6379/0
-      - ENVIRONMENT=${ENVIRONMENT:-development}
-    volumes:
-      - ./components/api/config:/app
-    ports:
-      - "${API_PORT:-8080}:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - redstone-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Background Worker Service
-  worker:
-    build:
-      context: ./components/worker
-      dockerfile: Dockerfile
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_DB=0
-      - WORKER_ID=${WORKER_ID:-worker-1}
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/redmica_production
-    volumes:
-      - ./components/worker/config:/app
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - redstone-network
-    restart: unless-stopped
     deploy:
-      replicas: ${WORKER_REPLICAS:-1}
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.3'
 
-  # Redis - Cache and message queue
-  redis:
-    image: redis:${REDIS_VERSION:-7-alpine}
+  # Grafana - Metrics visualization and dashboards
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-10.1.0}
+    container_name: redstone-grafana
+    profiles: ["monitoring", "production", "development"]
+    labels:
+      - "service=grafana"
+      - "logging=enabled"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service"
+    environment:
+      # Security configuration
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      # LDAP Authentication (restored from working config)
+      GF_AUTH_LDAP_ENABLED: 'true'
+      GF_AUTH_LDAP_CONFIG_FILE: '/etc/grafana/ldap.toml'
+      GF_AUTH_LDAP_ALLOW_SIGN_UP: 'true'
+      # Server configuration
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      # Database configuration (using SQLite to avoid PostgreSQL conflicts)
+      GF_DATABASE_TYPE: sqlite3
+      GF_DATABASE_PATH: /var/lib/grafana/grafana.db
     volumes:
-      - ./storage/redis:/data
+      - grafana_data:/var/lib/grafana
+      - ./components/grafana/config/provisioning:/etc/grafana/provisioning:ro
+      - ./components/grafana/config/dashboards:/var/lib/grafana/dashboards:ro
+      - ./components/grafana/config/ldap.toml:/etc/grafana/ldap.toml:ro
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${GRAFANA_PORT:-3001}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+      loki:
+        condition: service_started
+    restart: unless-stopped
     networks:
       - redstone-network
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    command: redis-server --appendonly yes
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.3'
 
+  # Loki - Log aggregation system
+  loki:
+    image: grafana/loki:${LOKI_VERSION:-2.9.0}
+    container_name: redstone-loki
+    profiles: ["monitoring", "production", "development"]
+    labels:
+      - "service=loki"
+      - "logging=enabled"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+      - ./components/loki/config:/etc/loki:ro
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.3'
+
+  # Promtail - Log shipping agent for Loki
+  # Fluent Bit - Log shipping agent for Loki (replacing Promtail)
+  fluent-bit:
+    image: fluent/fluent-bit:${FLUENT_BIT_VERSION:-2.1.8}
+    container_name: redstone-fluent-bit
+    profiles: ["monitoring", "production", "development"]
+    volumes:
+      - ./components/fluent-bit:/fluent-bit/etc:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - fluent-bit-db:/var/log
+    environment:
+      - LOKI_HOST=loki
+      - LOKI_PORT=3100
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - CLUSTER_NAME=${CLUSTER_NAME:-docker-local}
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+
+  # Keep Promtail commented for now during transition
+  # promtail:
+  #   image: grafana/promtail:${PROMTAIL_VERSION:-2.9.0}
+  #   container_name: redstone-promtail
+  #   command: -config.file=/etc/promtail/config.yml
+  #   volumes:
+  #     - ./components/promtail/config:/etc/promtail:ro
+  #     - /var/log:/var/log:ro
+  #     - /var/lib/docker/containers:/var/lib/docker/containers:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   depends_on:
+  #     - loki
+  #   restart: unless-stopped
+  #   networks:
+  #     - redstone-network
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 128M
+  #         cpus: '0.1'
+
+# === NETWORKS ===
 networks:
   redstone-network:
     driver: bridge
+    name: redstone-network
 
-# No longer need named volumes since we're using local directories for persistence
+# === PERSISTENT VOLUMES ===
+volumes:
+  postgres_data:
+    name: redstone-postgres-data
+  redis_data:
+    name: redstone-redis-data
+  lldap_data:
+    name: redstone-lldap-data
+  redmica_files:
+    name: redstone-redmica-files
+  redmica_plugins:
+    name: redstone-redmica-plugins
+  prometheus_data:
+    name: redstone-prometheus-data
+  grafana_data:
+    name: redstone-grafana-data
+  loki_data:
+    name: redstone-loki-data
+  fluent-bit-db:
+    name: redstone-fluent-bit-db

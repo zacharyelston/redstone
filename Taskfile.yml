@@ -1,0 +1,106 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  PROJECT_NAME: redstone
+  DEFAULT_PROFILE: production
+
+tasks:
+  setup:
+    desc: "Complete environment setup with auto-provisioning"
+    cmds:
+      - cp .env.example .env
+      - ./scripts/generate-secrets.sh
+      - ./scripts/setup-ldap-seed.sh
+      - echo "✅ Environment setup complete"
+
+  deploy:
+    desc: "Deploy with profile"
+    cmds:
+      - echo "🚀 Deploying with profile {{.PROFILE | default .DEFAULT_PROFILE}}"
+      - docker compose --profile {{.PROFILE | default .DEFAULT_PROFILE}} up -d
+      - ./scripts/initialize-database.sh
+      - ./scripts/configure-redmica.sh
+
+  deploy-dev:
+    desc: "Deploy development environment"
+    cmds:
+      - docker compose --profile development up -d
+      - ./scripts/initialize-database.sh
+      - ./scripts/configure-redmica.sh
+
+  deploy-prod:
+    desc: "Deploy production environment"
+    cmds:
+      - docker compose --profile production up -d
+      - ./scripts/initialize-database.sh
+      - ./scripts/configure-redmica.sh
+
+  teardown:
+    desc: "Complete teardown"
+    prompt: "This will destroy all data. Continue?"
+    cmds:
+      - echo "🧹 Stopping all services..."
+      - docker compose down -v
+      - echo "🗑️ Removing all images and volumes..."
+      - docker system prune -a --volumes --force
+      - echo "📄 Removing .env file..."
+      - rm -f .env
+      - echo "✅ Complete teardown finished"
+
+  test-rebuild:
+    desc: "Full teardown and rebuild test"
+    cmds:
+      - echo "🧪 Starting full rebuild test..."
+      - task: teardown
+      - task: setup
+      - task: deploy-dev
+      - echo "✅ Rebuild test completed successfully"
+
+  status:
+    desc: "Show status of all services"
+    cmds:
+      - docker compose ps
+      - ./scripts/check-health.sh
+
+  logs:
+    desc: "Show logs for all services"
+    cmds:
+      - docker compose logs -f
+
+  validate-config:
+    desc: "Validate configuration"
+    cmds:
+      - ./scripts/validate-config.sh
+
+  validate-stack:
+    desc: "Validate stack health"
+    cmds:
+      - ./scripts/validate-stack.sh
+
+  init-db:
+    desc: "Initialize database schemas and permissions"
+    cmds:
+      - ./scripts/initialize-database.sh
+
+  configure-redmica:
+    desc: "Configure Redmica with default trackers and enumerations"
+    cmds:
+      - ./scripts/configure-redmica.sh
+
+  help:
+    desc: "Show help"
+    cmds:
+      - echo "🎯 Redstone Environment Management"
+      - echo ""
+      - echo "📋 Common Commands:"
+      - echo "  task setup        # Initial setup"
+      - echo "  task deploy-dev   # Start development"
+      - echo "  task status       # Check status"
+      - echo "  task test-rebuild # Full rebuild test"
+      - echo "  task teardown     # Complete cleanup"
+
+  default:
+    cmds:
+      - task: help
