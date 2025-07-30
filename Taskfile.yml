@@ -12,6 +12,10 @@ tasks:
     cmds:
       - cp .env.example .env
       - ./scripts/generate-secrets.sh
+      - echo "🚀 Starting core services first..."
+      - docker compose --profile core up -d ldap postgres redis
+      - echo "⏳ Waiting for services to initialize..."
+      - sleep 10
       - ./scripts/setup-ldap-seed.sh
       - echo "✅ Environment setup complete"
 
@@ -38,22 +42,40 @@ tasks:
       - ./scripts/configure-redmica.sh
 
   teardown:
-    desc: "Complete teardown"
-    prompt: "This will destroy all data. Continue?"
+    desc: "Standard teardown - preserves images and .env"
     cmds:
       - echo "🧹 Stopping all services..."
       - docker compose down -v
-      - echo "🗑️ Removing all images and volumes..."
+      - echo "🗑️ Removing project volumes..."
+      - rm -rf ./storage/* || true
+      - echo "✅ Standard teardown finished (images and .env preserved)"
+
+  teardown-full:
+    desc: "Complete teardown including all images and configurations"
+    prompt: "This will destroy ALL data including .env and ALL Docker images. Continue?"
+    cmds:
+      - echo "🧹 Stopping all services..."
+      - docker compose down -v
+      - echo "🗑️ Removing all Docker images, containers, and volumes..."
       - docker system prune -a --volumes --force
-      - echo "📄 Removing .env file..."
+      - echo "📜 Removing .env file..."
       - rm -f .env
       - echo "✅ Complete teardown finished"
+
+  teardown-project:
+    desc: "Project teardown - removes only project images and volumes"
+    cmds:
+      - echo "🧹 Stopping all services..."
+      - docker compose down -v --rmi local
+      - echo "🗑️ Removing project volumes..."
+      - rm -rf ./storage/* || true
+      - echo "✅ Project teardown finished (.env preserved)"
 
   test-rebuild:
     desc: "Full teardown and rebuild test"
     cmds:
       - echo "🧪 Starting full rebuild test..."
-      - task: teardown
+      - task: teardown-full
       - task: setup
       - task: deploy-dev
       - echo "✅ Rebuild test completed successfully"
