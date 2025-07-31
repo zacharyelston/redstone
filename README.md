@@ -82,6 +82,28 @@ Redstone provides automated LDAP authentication setup for all components:
 - **Password**: devpassword
 - **Groups**: developers, grafana_editors, redmica_users
 
+### Quick Start Deployment
+
+```bash
+# Clone the repository
+git clone https://github.com/zacharyelston/redstone.git
+cd redstone
+
+# Install task (if not already installed)
+brew install go-task/tap/go-task
+
+# Create .env file from example
+cp .env.example .env
+
+# Deploy the full stack
+task deploy
+
+# Access services
+# Redmica: http://localhost:3000 (default admin/admin or LDAP credentials)
+# Grafana: http://localhost:3002 (LDAP credentials)
+# LDAP admin: http://localhost:17170 (admin/admin)
+```
+
 The configuration system will automatically detect and use your custom configuration during setup.
 
 ### Configuration Format
