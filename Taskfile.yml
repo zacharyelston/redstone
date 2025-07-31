@@ -25,6 +25,7 @@ tasks:
       - echo "🚀 Deploying with profile {{.PROFILE | default .DEFAULT_PROFILE}}"
       - docker compose --profile {{.PROFILE | default .DEFAULT_PROFILE}} up -d
       - ./scripts/initialize-database.sh
+      - ./scripts/bootstrap-ldap-official.sh
       - ./scripts/configure-redmica.sh
       - ./scripts/configure-redmica-ldap.sh
       - echo "✅ Running LDAP authentication test to validate setup..."
@@ -35,6 +36,7 @@ tasks:
     cmds:
       - docker compose --profile development up -d
       - ./scripts/initialize-database.sh
+      - ./scripts/bootstrap-ldap-official.sh
       - ./scripts/configure-redmica.sh
       - ./scripts/configure-redmica-ldap.sh
       - echo "✅ Running LDAP authentication test to validate setup..."
@@ -45,6 +47,7 @@ tasks:
     cmds:
       - docker compose --profile production up -d
       - ./scripts/initialize-database.sh
+      - ./scripts/bootstrap-ldap-official.sh
       - ./scripts/configure-redmica.sh
       - ./scripts/configure-redmica-ldap.sh
       - echo "✅ Running LDAP authentication test to validate setup..."
