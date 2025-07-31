@@ -1,0 +1,13 @@
+{
+  "id": "admin_user",
+  "email": "admin@redstone.local",
+  "password": "adminpassword",
+  "displayName": "Redstone Admin",
+  "firstName": "Redstone",
+  "lastName": "Admin",
+  "groups": [
+    "admins",
+    "redmine_admins",
+    "grafana_admins"
+  ]
+}

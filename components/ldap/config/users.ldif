@@ -1,0 +1,150 @@
+# Generated LDIF from YAML configuration
+dn: dc=redstone,dc=local
+objectClass: dcObject
+objectClass: organization
+dc: redstone
+o: Redstone Organization
+
+dn: ou=users,dc=redstone,dc=local
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=redstone,dc=local
+objectClass: organizationalUnit
+ou: groups
+
+dn: ou=services,dc=redstone,dc=local
+objectClass: organizationalUnit
+ou: services
+
+dn: uid=redmica_service,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: redmica_service
+cn: Redmica Service
+sn: Redmica Service
+displayName: Redmica Service
+mail: redmica@redstone.local
+userPassword: redmica_password
+
+dn: uid=grafana_service,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: grafana_service
+cn: Grafana Service
+sn: Grafana Service
+displayName: Grafana Service
+mail: grafana@redstone.local
+userPassword: grafana_password
+
+dn: uid=loki_service,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: loki_service
+cn: Loki Service
+sn: Loki Service
+displayName: Loki Service
+mail: loki@redstone.local
+userPassword: loki_password
+
+dn: uid=prometheus_service,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: prometheus_service
+cn: Prometheus Service
+sn: Prometheus Service
+displayName: Prometheus Service
+mail: prometheus@redstone.local
+userPassword: prometheus_password
+
+dn: uid=admin_user,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: admin_user
+cn: Admin User
+sn: User
+givenName: Admin
+displayName: Admin User
+mail: admin@redstone.local
+userPassword: admin_password
+
+dn: uid=developer_user,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: developer_user
+cn: Developer User
+sn: User
+givenName: Developer
+displayName: Developer User
+mail: developer@redstone.local
+userPassword: developer_password
+
+dn: uid=viewer_user,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: viewer_user
+cn: Viewer User
+sn: User
+givenName: Viewer
+displayName: Viewer User
+mail: viewer@redstone.local
+userPassword: viewer_password
+
+dn: cn=administrators,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: administrators
+description: Full access to all Redstone services
+member: uid=admin_user,ou=users,dc=redstone,dc=local
+
+dn: cn=developers,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: developers
+description: Development team with access to most services
+member: uid=developer_user,ou=users,dc=redstone,dc=local
+
+dn: cn=viewers,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: viewers
+description: Read-only access to dashboards and reports
+member: uid=viewer_user,ou=users,dc=redstone,dc=local
+
+dn: cn=service_accounts,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: service_accounts
+description: Group for service automation accounts
+member: uid=redmica_service,ou=users,dc=redstone,dc=local
+member: uid=grafana_service,ou=users,dc=redstone,dc=local
+member: uid=loki_service,ou=users,dc=redstone,dc=local
+member: uid=prometheus_service,ou=users,dc=redstone,dc=local
+
+dn: cn=redmica_users,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: redmica_users
+description: Users with access to Redmica
+member: uid=redmica_service,ou=users,dc=redstone,dc=local
+
+dn: cn=grafana_users,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: grafana_users
+description: Users with access to Grafana
+member: uid=grafana_service,ou=users,dc=redstone,dc=local
+
+dn: cn=log_viewers,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: log_viewers
+description: Users with access to logs
+member: uid=loki_service,ou=users,dc=redstone,dc=local
+
+dn: cn=metrics_collectors,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: metrics_collectors
+description: Services that collect metrics
+member: uid=prometheus_service,ou=users,dc=redstone,dc=local
+

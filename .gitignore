@@ -1,0 +1,35 @@
+# Storage directory - contains runtime data, logs, and databases
+/storage/
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+.env
+.env.local
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+vendor/
+.pip-cache/
+
+# Build outputs
+dist/
+build/
+target/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+.directory
+
+# Editor specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
