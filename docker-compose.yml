@@ -45,31 +45,26 @@ services:
     networks:
       - redstone-network
 
-  # LDAP service for authentication
+  # LDAP service for authentication (lldap)
   ldap:
-    image: osixia/openldap:1.5.0
-    command: --copy-service
+    image: nitnelave/lldap:stable
     volumes:
-      - ./storage/ldap/data:/var/lib/ldap
-      - ./storage/ldap/config:/etc/ldap/slapd.d
-      - ./components/ldap/config/users.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/users.ldif
+      - ./storage/ldap/lldap-data:/data
     environment:
-      - LDAP_ORGANISATION=Redstone Project
-      - LDAP_DOMAIN=redstone.local
-      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-admin}
-      - LDAP_CONFIG_PASSWORD=${LDAP_CONFIG_PASSWORD:-config}
-      - LDAP_TLS=false
-      - LDAP_READONLY_USER=false
-      - LDAP_REPLICATION=false
-      - KEEP_EXISTING_CONFIG=false
-      - LDAP_REMOVE_CONFIG_AFTER_SETUP=true
-      - BOOTSTRAP=true
+      - LLDAP_JWT_SECRET=jwt_secret
+      - LLDAP_LDAP_USER_PASS=${LDAP_ADMIN_PASSWORD:-adminadmin}
+      - LLDAP_LDAP_BASE_DN=dc=redstone,dc=local
     ports:
-      - "389:389"
-      - "636:636"
+      - "3892:17170" # HTTP API and Web UI (changed host port to avoid conflict)
+      - "389:3890"   # LDAP
     networks:
       - redstone-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3890"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   # Monitoring - Grafana
   grafana:

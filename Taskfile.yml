@@ -16,7 +16,7 @@ tasks:
       - docker compose --profile core up -d ldap postgres redis
       - echo "⏳ Waiting for services to initialize..."
       - sleep 10
-      - ./scripts/setup-ldap-seed.sh
+      - ./scripts/configure-ldap.sh
       - echo "✅ Environment setup complete"
 
   deploy:

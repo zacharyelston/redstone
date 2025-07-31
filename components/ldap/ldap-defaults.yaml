@@ -1,0 +1,128 @@
+# LDAP Default Configuration for Redstone
+# This file defines the default users, groups, and roles for LDAP integration
+# Customize this file to match your organization's structure and naming conventions
+
+# Base configuration
+base_config:
+  domain: redstone.local
+  base_dn: dc=redstone,dc=local
+  admin_password: adminadmin  # Must be at least 8 characters for lldap
+
+# Service accounts - one for each component that requires LDAP authentication
+service_users:
+  - username: redmica_service
+    display_name: Redmica Service
+    password: redmica_password  # Should be generated or loaded from env in production
+    email: redmica@redstone.local
+    groups:
+      - service_accounts
+      - redmica_users
+      
+  - username: grafana_service
+    display_name: Grafana Service
+    password: grafana_password  # Should be generated or loaded from env in production
+    email: grafana@redstone.local
+    groups:
+      - service_accounts
+      - grafana_users
+      
+  - username: loki_service
+    display_name: Loki Service
+    password: loki_password  # Should be generated or loaded from env in production
+    email: loki@redstone.local
+    groups:
+      - service_accounts
+      - log_viewers
+
+  - username: prometheus_service
+    display_name: Prometheus Service
+    password: prometheus_password  # Should be generated or loaded from env in production
+    email: prometheus@redstone.local
+    groups:
+      - service_accounts
+      - metrics_collectors
+
+# Regular users for human access
+users:
+  - username: admin_user
+    first_name: Admin
+    last_name: User
+    display_name: Admin User
+    password: admin_password  # Should be changed on first login
+    email: admin@redstone.local
+    groups:
+      - administrators
+      
+  - username: developer_user
+    first_name: Developer
+    last_name: User
+    display_name: Developer User
+    password: developer_password  # Should be changed on first login
+    email: developer@redstone.local
+    groups:
+      - developers
+      - project_users
+      
+  - username: viewer_user
+    first_name: Viewer
+    last_name: User
+    display_name: Viewer User
+    password: viewer_password  # Should be changed on first login
+    email: viewer@redstone.local
+    groups:
+      - viewers
+
+# Groups definition with descriptions
+groups:
+  - name: administrators
+    display_name: Administrators
+    description: Full access to all Redstone services
+    
+  - name: developers
+    display_name: Developers
+    description: Development team with access to most services
+    
+  - name: viewers
+    display_name: Viewers
+    description: Read-only access to dashboards and reports
+    
+  - name: service_accounts
+    display_name: Service Accounts
+    description: Group for service automation accounts
+    
+  - name: redmica_users
+    display_name: Redmica Users
+    description: Users with access to Redmica
+    
+  - name: grafana_users
+    display_name: Grafana Users
+    description: Users with access to Grafana
+    
+  - name: log_viewers
+    display_name: Log Viewers
+    description: Users with access to logs
+    
+  - name: metrics_collectors
+    display_name: Metrics Collectors
+    description: Services that collect metrics
+
+# Role mappings for service integrations
+# These map LDAP groups to roles in specific services
+role_mappings:
+  redmica:
+    admin: 
+      - administrators
+    developer:
+      - developers
+    user:
+      - viewers
+      - redmica_users
+      
+  grafana:
+    admin:
+      - administrators
+    editor:
+      - developers
+    viewer:
+      - viewers
+      - grafana_users

@@ -44,8 +44,58 @@ Redstone is built according to the "Built for Clarity" design philosophy, emphas
 
 1. Clone this repository
 2. Copy `.env.example` to `.env` and adjust variables as needed
-3. Run `docker-compose up` to start all services locally
-4. Access the application at http://localhost:8080
+3. Run `task setup` to initialize the environment with core services and LDAP configuration
+4. Run `docker-compose up` to start all services locally
+5. Access the application at http://localhost:8080
+
+## LDAP Configuration
+
+Redstone provides a flexible, configuration-based approach for managing LDAP users, groups, and role mappings:
+
+### Default Configuration
+
+The default LDAP structure is defined in `components/ldap/ldap-defaults.yaml` and includes:
+
+- Service accounts for each component (Redmica, Grafana, Loki, etc.)
+- Common user roles (admin, developer, viewer)
+- Standard groups and permissions
+- Role mappings for service integrations
+
+### Customizing LDAP
+
+To customize LDAP for your organization:
+
+1. **Option 1**: Edit `components/ldap/ldap-defaults.yaml` directly
+2. **Option 2**: Create a custom configuration at `custom/ldap-config.yaml`
+
+The configuration system will automatically detect and use your custom configuration during setup.
+
+### Configuration Format
+
+```yaml
+# Example structure (see ldap-defaults.yaml for full reference)
+base_config:
+  domain: yourdomain.local
+  base_dn: dc=yourdomain,dc=local
+
+users:
+  - username: example_user
+    display_name: Example User
+    email: user@example.com
+    groups: [developers, project_users]
+
+groups:
+  - name: developers
+    display_name: Developers
+    description: Development team access
+
+role_mappings:
+  redmica:
+    admin: [administrators]
+    developer: [developers]
+```
+
+The LDAP configuration is automatically applied during deployment using the scripts in `components/ldap/` and `scripts/configure-ldap.sh`.
 
 ## Deployment Options
 
