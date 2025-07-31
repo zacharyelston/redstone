@@ -77,11 +77,17 @@ services:
     volumes:
       - ./storage/grafana:/var/lib/grafana
       - ./components/monitoring/grafana:/etc/grafana/provisioning
+      - ./components/monitoring/grafana/auth/ldap.toml:/etc/grafana/ldap.toml
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_LDAP_ENABLED: "true"
+      GF_AUTH_LDAP_CONFIG_FILE: "/etc/grafana/ldap.toml"
+      GF_AUTH_LDAP_ALLOW_SIGN_UP: "true"
+      GF_LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-admin}
+      GF_LOG_LEVEL: "debug"
     ports:
-      - "${GRAFANA_PORT:-3001}:3000"
+      - "${GRAFANA_PORT:-3002}:3000"
     networks:
       - redstone-network
     restart: unless-stopped
@@ -111,6 +117,39 @@ services:
   # API Service has been removed from streamlined deployment
 
   # Background Worker Service has been removed from streamlined deployment
+
+  # Loki - Log aggregation
+  loki:
+    image: grafana/loki:${LOKI_VERSION:-2.9.0}
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./storage/loki:/loki
+      - ./components/monitoring/loki:/etc/loki
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    networks:
+      - redstone-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Fluent Bit - Log processor
+  fluent-bit:
+    image: fluent/fluent-bit:${FLUENT_BIT_VERSION:-2.1.8}
+    volumes:
+      - ./components/logging/fluent-bit:/fluent-bit/etc
+    environment:
+      - LOKI_HOST=loki
+      - LOKI_PORT=3100
+    depends_on:
+      loki:
+        condition: service_started
+    networks:
+      - redstone-network
+    restart: unless-stopped
 
   # Redis - Cache and message queue
   redis:

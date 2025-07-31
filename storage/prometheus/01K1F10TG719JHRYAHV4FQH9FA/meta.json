@@ -1,0 +1,17 @@
+{
+	"ulid": "01K1F10TG719JHRYAHV4FQH9FA",
+	"minTime": 1753912802851,
+	"maxTime": 1753920000000,
+	"stats": {
+		"numSamples": 145386,
+		"numSeries": 591,
+		"numChunks": 1773
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01K1F10TG719JHRYAHV4FQH9FA"
+		]
+	},
+	"version": 1
+}

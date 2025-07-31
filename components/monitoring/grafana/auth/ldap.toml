@@ -1,0 +1,37 @@
+# LDAP Configuration for Grafana
+# Basic configuration
+verbose_logging = false
+
+[[servers]]
+host = "ldap"
+port = 389
+use_ssl = false
+start_tls = false
+ssl_skip_verify = true
+bind_dn = "cn=admin,dc=redstone,dc=local"
+bind_password = "${LDAP_ADMIN_PASSWORD:-admin}"
+search_filter = "(uid=%s)"
+search_base_dns = ["dc=redstone,dc=local"]
+
+# User mapping
+[servers.attributes]
+name = "givenName"
+surname = "sn"
+username = "uid"
+member_of = "memberOf"
+email = "mail"
+
+# Group mappings - Admin
+[[servers.group_mappings]]
+group_dn = "cn=admins,ou=groups,dc=redstone,dc=local"
+org_role = "Admin"
+
+# Group mappings - Editor
+[[servers.group_mappings]]
+group_dn = "cn=editors,ou=groups,dc=redstone,dc=local"
+org_role = "Editor"
+
+# Group mappings - Viewer (default)
+[[servers.group_mappings]]
+group_dn = "*"
+org_role = "Viewer"
