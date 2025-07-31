@@ -459,8 +459,8 @@ fi
 # Check if ldapsearch is now available
 if command -v ldapsearch >/dev/null 2>&1; then
   
-    # Use LDAP port 389 by default (standard port for LDAP on host)
-  LDAP_PORT="389"
+    # Use LDAP port 3890 by default (consistent with our Docker Compose port mapping)
+  LDAP_PORT="3890"
   
   # Try to detect actual port mapping if it exists
   DETECTED_PORT=$(docker port $LDAP_CONTAINER 3890 2>/dev/null | head -n1 | cut -d':' -f2)

@@ -1,0 +1,54 @@
+# Redmica Main Configuration
+# Following the "Built for Clarity" design philosophy - simple, modular, maintainable
+
+production:
+  email_delivery:
+    delivery_method: :smtp
+    smtp_settings:
+      address: "smtp"
+      port: 1025
+      domain: "redstone.local"
+      
+  # Default language
+  default_language: en
+
+  # Security settings
+  session_store: :active_record_store
+  
+  # LDAP authentication configuration
+  ldap:
+    enabled: true
+    host: ldap
+    port: 3890
+    account: 'uid=admin,ou=people,dc=redstone,dc=local'
+    password: 'adminadmin'
+    base_dn: 'ou=people,dc=redstone,dc=local'
+    attr_login: uid
+    attr_firstname: givenname
+    attr_lastname: sn
+    attr_mail: mail
+    attr_username: cn
+    # Group settings
+    group_base_dn: 'ou=groups,dc=redstone,dc=local'
+    group_attribute: cn
+    member_attribute: member
+    admin_group: 'admins'
+    developers_group: 'developers'
+    users_group: 'redmica_users'
+    onthefly_register: true
+    self_register: true
+    tls: false
+    timeout: 20
+    
+  # Attachment settings
+  attachments_storage_path: files
+  autologin_cookie_name: autologin
+  autologin_cookie_path: /
+  autologin_cookie_secure: false
+  
+  # REST API settings
+  rest_api_enabled: true
+  
+  # SCM settings
+  scm_subversion_command: svn
+  scm_git_command: git

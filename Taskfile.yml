@@ -26,6 +26,9 @@ tasks:
       - docker compose --profile {{.PROFILE | default .DEFAULT_PROFILE}} up -d
       - ./scripts/initialize-database.sh
       - ./scripts/configure-redmica.sh
+      - ./scripts/configure-redmica-ldap.sh
+      - echo "✅ Running LDAP authentication test to validate setup..."
+      - task: test-ldap
 
   deploy-dev:
     desc: "Deploy development environment"
@@ -33,6 +36,9 @@ tasks:
       - docker compose --profile development up -d
       - ./scripts/initialize-database.sh
       - ./scripts/configure-redmica.sh
+      - ./scripts/configure-redmica-ldap.sh
+      - echo "✅ Running LDAP authentication test to validate setup..."
+      - task: test-ldap
 
   deploy-prod:
     desc: "Deploy production environment"
@@ -40,6 +46,15 @@ tasks:
       - docker compose --profile production up -d
       - ./scripts/initialize-database.sh
       - ./scripts/configure-redmica.sh
+      - ./scripts/configure-redmica-ldap.sh
+      - echo "✅ Running LDAP authentication test to validate setup..."
+      - task: test-ldap
+
+  test-ldap:
+    desc: "Test LDAP authentication for Grafana and Redmica"
+    cmds:
+      - echo "🔍 Testing LDAP authentication setup..."
+      - ./scripts/test-ldap-auth.sh
 
   teardown:
     desc: "Standard teardown - preserves images and .env"
