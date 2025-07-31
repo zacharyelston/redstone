@@ -68,6 +68,20 @@ To customize LDAP for your organization:
 1. **Option 1**: Edit `components/ldap/ldap-defaults.yaml` directly
 2. **Option 2**: Create a custom configuration at `custom/ldap-config.yaml`
 
+### LDAP Authentication
+
+Redstone provides automated LDAP authentication setup for all components:
+
+- **Port**: LDAP uses port 3890 consistently across all services
+- **Automated Configuration**: The deployment process configures LDAP for both Grafana and Redmica
+- **Testing**: Run `task test-ldap` to verify LDAP authentication is working properly
+
+#### Default Test Credentials
+
+- **Username**: developer_user
+- **Password**: devpassword
+- **Groups**: developers, grafana_editors, redmica_users
+
 The configuration system will automatically detect and use your custom configuration during setup.
 
 ### Configuration Format
