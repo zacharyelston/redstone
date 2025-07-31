@@ -1,4 +1,3 @@
-version: "3.8"
 
 services:
   # PostgreSQL database for Redmica
@@ -47,7 +46,7 @@ services:
 
   # LDAP service for authentication (lldap)
   ldap:
-    image: nitnelave/lldap:stable
+    image: lldap/lldap:stable
     volumes:
       - ./storage/ldap/lldap-data:/data
     environment:
@@ -56,12 +55,12 @@ services:
       - LLDAP_LDAP_BASE_DN=dc=redstone,dc=local
     ports:
       - "3892:17170" # HTTP API and Web UI (changed host port to avoid conflict)
-      - "389:3890"   # LDAP
+      - "3890:3890"   # LDAP - Using same port both inside and outside container
     networks:
       - redstone-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "3890"]
+      test: ["CMD", "nc", "-z", "0.0.0.0", "3890"]
       interval: 10s
       timeout: 5s
       retries: 3

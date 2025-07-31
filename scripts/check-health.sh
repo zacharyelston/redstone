@@ -39,7 +39,7 @@ check_container_health() {
 
 # Check core services
 echo "\nCore Services:"
-check_container_health "ldap"
+check_container_health "lldap"
 check_container_health "postgres"
 check_container_health "redmica"
 

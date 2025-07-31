@@ -2,10 +2,28 @@
 # This file defines the default users, groups, and roles for LDAP integration
 # Customize this file to match your organization's structure and naming conventions
 
+# ===================================================================================
+# IMPORTANT: Directory Structure for Official LLDAP Image (lldap/lldap:stable)
+# ===================================================================================
+# The official LLDAP image uses the following directory structure:
+#
+# - Base DN: dc=redstone,dc=local
+# - Users DN: ou=people,dc=redstone,dc=local  (NOT cn=users,dc=redstone,dc=local)
+# - Groups DN: ou=groups,dc=redstone,dc=local
+#
+# Admin Account: uid=admin,ou=people,dc=redstone,dc=local
+# 
+# Ensure all LDAP configurations in other services (Grafana, Redmine, etc.) use
+# these correct paths. Incorrect paths will result in authentication failures.
+# ===================================================================================
+
 # Base configuration
 base_config:
   domain: redstone.local
   base_dn: dc=redstone,dc=local
+  users_dn: ou=people,dc=redstone,dc=local  # Important: uses 'ou=people' not 'cn=users'
+  groups_dn: ou=groups,dc=redstone,dc=local
+  admin_dn: uid=admin,ou=people,dc=redstone,dc=local
   admin_password: adminadmin  # Must be at least 8 characters for lldap
 
 # Service accounts - one for each component that requires LDAP authentication
