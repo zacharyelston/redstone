@@ -1,0 +1,13 @@
+{
+  "id": "viewer_user",
+  "email": "viewer@redstone.local",
+  "password": "viewerpassword",
+  "displayName": "Viewer User",
+  "firstName": "Viewer",
+  "lastName": "User",
+  "groups": [
+    "viewers",
+    "redmine_users",
+    "grafana_users"
+  ]
+}

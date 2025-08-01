@@ -1,0 +1,16 @@
+[
+  {
+    "name": "display_name",
+    "attributeType": "STRING",
+    "isEditable": true,
+    "isList": false,
+    "isVisible": true
+  },
+  {
+    "name": "description",
+    "attributeType": "STRING",
+    "isEditable": true,
+    "isList": false,
+    "isVisible": true
+  }
+]

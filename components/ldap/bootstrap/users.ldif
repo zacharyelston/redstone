@@ -1,0 +1,82 @@
+# LDAP Users and Groups Configuration for Redstone Project
+# This file defines the organizational units, groups, and users for LDAP authentication
+
+# Create organizational units
+dn: ou=users,dc=redstone,dc=local
+objectClass: organizationalUnit
+objectClass: top
+ou: users
+
+dn: ou=groups,dc=redstone,dc=local
+objectClass: organizationalUnit
+objectClass: top
+ou: groups
+
+# Create admin group
+dn: cn=admins,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: admins
+description: Redstone Administrators
+member: uid=admin_user,ou=users,dc=redstone,dc=local
+
+# Create editor group
+dn: cn=editors,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: editors
+description: Redstone Editors
+member: uid=editor_user,ou=users,dc=redstone,dc=local
+
+# Create viewer group
+dn: cn=viewers,ou=groups,dc=redstone,dc=local
+objectClass: groupOfNames
+cn: viewers
+description: Redstone Viewers
+member: uid=viewer_user,ou=users,dc=redstone,dc=local
+
+# Create admin user
+dn: uid=admin_user,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: admin_user
+sn: Admin
+givenName: Redstone
+cn: Redstone Admin
+displayName: Redstone Admin
+uidNumber: 10000
+gidNumber: 10000
+userPassword: admin_password
+homeDirectory: /home/admin
+mail: admin@redstone.local
+
+# Create editor user
+dn: uid=editor_user,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: editor_user
+sn: Editor
+givenName: Redstone
+cn: Redstone Editor
+displayName: Redstone Editor
+uidNumber: 10001
+gidNumber: 10001
+userPassword: editor_password
+homeDirectory: /home/editor
+mail: editor@redstone.local
+
+# Create viewer user
+dn: uid=viewer_user,ou=users,dc=redstone,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: viewer_user
+sn: Viewer
+givenName: Redstone
+cn: Redstone Viewer
+displayName: Redstone Viewer
+uidNumber: 10002
+gidNumber: 10002
+userPassword: viewer_password
+homeDirectory: /home/viewer
+mail: viewer@redstone.local
