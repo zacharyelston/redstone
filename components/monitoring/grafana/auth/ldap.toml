@@ -1,0 +1,60 @@
+# LDAP Configuration for Grafana
+# Basic configuration
+verbose_logging = true # Enable verbose logging for troubleshooting
+
+[[servers]]
+# Use the internal Docker service name for LDAP
+host = "ldap"
+# This is the LDAP server port exposed by the lldap container
+port = 3890
+# Note: The LDAP server binds to 0.0.0.0:3890 inside the container
+use_ssl = false
+start_tls = false
+ssl_skip_verify = true
+# Use the admin user for binding with LLDAP
+bind_dn = "uid=admin,ou=people,dc=redstone,dc=local"
+bind_password = "adminadmin"
+# Search filter for users - match on uid
+search_filter = "(uid=%s)"
+# Base DN for user search
+search_base_dns = ["ou=people,dc=redstone,dc=local"]
+
+# User mapping - match LLDAP attribute names
+[servers.attributes]
+name = "givenname"
+surname = "sn"
+username = "uid"
+member_of = "objectclass"
+email = "mail"
+display_name = "cn"
+
+# Group mappings based on our LDAP defaults.yaml
+
+# Administrators group mapping
+[[servers.group_mappings]]
+# Path to admins group
+group_dn = "cn=admins,ou=groups,dc=redstone,dc=local"
+org_role = "Admin"
+
+# Developers group mapping
+[[servers.group_mappings]]
+# Path to developers group
+group_dn = "cn=developers,ou=groups,dc=redstone,dc=local"
+org_role = "Editor"
+
+# Grafana Users group mapping
+[[servers.group_mappings]]
+# Path to grafana_users group
+group_dn = "cn=grafana_users,ou=groups,dc=redstone,dc=local"
+org_role = "Editor"
+
+# Viewers group mapping
+[[servers.group_mappings]]
+# Path to viewers group
+group_dn = "cn=viewers,ou=groups,dc=redstone,dc=local"
+org_role = "Viewer"
+
+# Default mapping for all other groups
+[[servers.group_mappings]]
+group_dn = "*"
+org_role = "Viewer"

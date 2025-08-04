@@ -1,0 +1,37 @@
+[
+  {
+    "name": "username",
+    "attributeType": "STRING",
+    "isEditable": true,
+    "isList": false,
+    "isVisible": true
+  },
+  {
+    "name": "email",
+    "attributeType": "STRING",
+    "isEditable": true,
+    "isList": false,
+    "isVisible": true
+  },
+  {
+    "name": "display_name",
+    "attributeType": "STRING",
+    "isEditable": true,
+    "isList": false,
+    "isVisible": true
+  },
+  {
+    "name": "first_name",
+    "attributeType": "STRING",
+    "isEditable": true,
+    "isList": false,
+    "isVisible": true
+  },
+  {
+    "name": "last_name",
+    "attributeType": "STRING",
+    "isEditable": true,
+    "isList": false,
+    "isVisible": true
+  }
+]
