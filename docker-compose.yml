@@ -13,6 +13,7 @@ services:
     restart: unless-stopped
     networks:
       - redstone-network
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -22,19 +23,23 @@ services:
       ldap:
         condition: service_started
 
-  # Redmica - Redmine fork for project management
+  # Redmica - Redmine fork for project management with custom search features
   redmica:
-    image: redmica/redmica:${REDMICA_VERSION:-3.1.7}
+    image: redstone-redmica:custom
     environment:
-      REDMINE_DB_POSTGRES: postgres
+      REDMINE_DB_DATABASE: redmica_production
+      REDMINE_DB_HOST: postgres
       REDMINE_DB_USERNAME: postgres
       REDMINE_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      REDMINE_DB_ADAPTER: postgresql
       SECRET_KEY_BASE: ${REDMICA_SECRET_KEY_BASE:-changemeinproduction}
       REDMINE_PLUGINS_MIGRATE: 'true'
+      REDMINE_API_KEY: ${REDMINE_API_KEY:-changethisinyourenv}
     volumes:
       - ./storage/redmica/files:/usr/src/redmine/files
       - ./storage/redmica/plugins:/usr/src/redmine/plugins
-      - ./components/redmica/config:/usr/src/redmine/config/configuration.yml.d
+      - ./components/redmica/config:/etc/redmica
+      - ./components/redmica/scripts:/scripts
     ports:
       - "${REDMICA_PORT:-3000}:3000"
     depends_on:
@@ -43,7 +48,30 @@ services:
     restart: unless-stopped
     networks:
       - redstone-network
-
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      
+  # Redmica Initialization - Applies trackers and enumerations
+  redmica-init:
+    image: alpine:latest
+    volumes:
+      - ./components/redmica/scripts:/scripts
+      - ./components/redmica/config:/etc/redmica
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - REDMICA_CONTAINER=redstone-redmica-1
+    depends_on:
+      redmica:
+        condition: service_healthy
+    command: ["/bin/sh", "-c", "apk add --no-cache bash docker curl && echo 'Waiting for Redmica to be ready...' && sleep 5 && bash /scripts/initialize_redmica.sh"]
+    restart: on-failure
+    networks:
+      - redstone-network
+      
   # LDAP service for authentication (lldap)
   ldap:
     image: lldap/lldap:stable
@@ -53,12 +81,14 @@ services:
       - LLDAP_JWT_SECRET=jwt_secret
       - LLDAP_LDAP_USER_PASS=${LDAP_ADMIN_PASSWORD:-adminadmin}
       - LLDAP_LDAP_BASE_DN=dc=redstone,dc=local
+      - LLDAP_LOG_LEVEL=info # Ensuring logs are generated at info level
     ports:
       - "3892:17170" # HTTP API and Web UI (changed host port to avoid conflict)
       - "3890:3890"   # LDAP - Using same port both inside and outside container
     networks:
       - redstone-network
     restart: unless-stopped
+
     healthcheck:
       test: ["CMD", "nc", "-z", "0.0.0.0", "3890"]
       interval: 10s
@@ -70,8 +100,9 @@ services:
     image: grafana/grafana:${GRAFANA_VERSION:-9.5.2}
     volumes:
       - ./storage/grafana:/var/lib/grafana
-      - ./components/monitoring/grafana:/etc/grafana/provisioning
+      - ./components/monitoring/grafana/provisioning:/etc/grafana/provisioning
       - ./components/monitoring/grafana/auth/ldap.toml:/etc/grafana/ldap.toml
+      - ./components/monitoring/grafana/dashboards:/etc/grafana/dashboards
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
@@ -79,11 +110,14 @@ services:
       GF_AUTH_LDAP_CONFIG_FILE: "/etc/grafana/ldap.toml"
       GF_AUTH_LDAP_ALLOW_SIGN_UP: "true"
       GF_LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-admin}
+      GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "/etc/grafana/dashboards/system-overview.json"
       GF_LOG_LEVEL: "debug"
     ports:
       - "${GRAFANA_PORT:-3002}:3000"
     networks:
       - redstone-network
+
     restart: unless-stopped
     depends_on:
       - prometheus
@@ -135,6 +169,8 @@ services:
     image: fluent/fluent-bit:${FLUENT_BIT_VERSION:-2.1.8}
     volumes:
       - ./components/logging/fluent-bit:/fluent-bit/etc
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - LOKI_HOST=loki
       - LOKI_PORT=3100

@@ -2,6 +2,14 @@
 # Following the "Built for Clarity" design philosophy - simple, modular, maintainable
 
 production:
+  # Database configuration
+  database:
+    adapter: postgresql
+    database: postgres
+    host: redstone-postgres-1
+    username: postgres
+    password: postgres
+    encoding: utf8
   email_delivery:
     delivery_method: :smtp
     smtp_settings:

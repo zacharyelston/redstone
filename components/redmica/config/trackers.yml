@@ -1,0 +1,34 @@
+---
+# Redmica Trackers Configuration
+# This file defines all trackers that should be automatically created during initialization
+
+trackers:
+  - name: "Bug"
+    description: "Software defects and issues"
+    default_status_id: 1
+    is_in_roadmap: false
+  
+  - name: "Epic"
+    description: "Large feature that contains multiple stories"
+    default_status_id: 1
+    is_in_roadmap: true
+    
+  - name: "Story"
+    description: "User story that delivers specific business value"
+    default_status_id: 1
+    is_in_roadmap: true
+    
+  - name: "Feature"
+    description: "New functionality to be developed"
+    default_status_id: 1
+    is_in_roadmap: true
+    
+  - name: "Support"
+    description: "Assistance and troubleshooting requests"
+    default_status_id: 1
+    is_in_roadmap: false
+  
+  - name: "Task"
+    description: "General work items"
+    default_status_id: 1
+    is_in_roadmap: true

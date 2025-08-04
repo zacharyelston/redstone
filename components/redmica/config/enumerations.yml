@@ -1,0 +1,85 @@
+---
+# Redmica Enumerations Configuration
+# This file defines all enumeration values that should be automatically created during initialization
+
+# Issue Priorities
+issue_priorities:
+  - name: "Low"
+    position: 1
+    is_default: false
+    active: true
+  - name: "Normal"
+    position: 2
+    is_default: true
+    active: true
+  - name: "High"
+    position: 3
+    is_default: false
+    active: true
+  - name: "Urgent"
+    position: 4
+    is_default: false
+    active: true
+  - name: "Immediate"
+    position: 5
+    is_default: false
+    active: true
+
+# Issue Statuses
+issue_statuses:
+  - name: "New"
+    position: 1
+    is_closed: false
+    is_default: true
+  - name: "In Progress"
+    position: 2
+    is_closed: false
+    is_default: false
+  - name: "Resolved"
+    position: 3
+    is_closed: false
+    is_default: false
+  - name: "Feedback"
+    position: 4
+    is_closed: false
+    is_default: false
+  - name: "Closed"
+    position: 5
+    is_closed: true
+    is_default: false
+  - name: "Rejected"
+    position: 6
+    is_closed: true
+    is_default: false
+
+# Document Categories
+document_categories:
+  - name: "Technical"
+    position: 1
+  - name: "User"
+    position: 2
+  - name: "Administrative"
+    position: 3
+
+# Time Entry Activities
+time_entry_activities:
+  - name: "Design"
+    position: 1
+    is_default: false
+    active: true
+  - name: "Development"
+    position: 2
+    is_default: true
+    active: true
+  - name: "Testing"
+    position: 3
+    is_default: false
+    active: true
+  - name: "Documentation"
+    position: 4
+    is_default: false
+    active: true
+  - name: "Management"
+    position: 5
+    is_default: false
+    active: true

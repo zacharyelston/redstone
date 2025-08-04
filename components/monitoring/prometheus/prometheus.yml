@@ -3,49 +3,52 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
+  # Self-monitoring - working
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
   
-  - job_name: 'redmica'
+  # Grafana - working
+  - job_name: 'grafana'
     metrics_path: /metrics
     static_configs:
-      - targets: ['redmica:3000']
+      - targets: ['redstone-grafana-1:3000']
         labels:
-          service: 'redmica'
-  
-  - job_name: 'node-exporter'
+          service: 'grafana'
+          
+  # Loki - working
+  - job_name: 'loki'
     static_configs:
-      - targets: ['node-exporter:9100']
-  
-  - job_name: 'postgres-exporter'
-    static_configs:
-      - targets: ['postgres-exporter:9187']
+      - targets: ['redstone-loki-1:3100']
         labels:
-          service: 'postgres'
-  
-  - job_name: 'redis-exporter'
-    static_configs:
-      - targets: ['redis-exporter:9121']
-        labels:
-          service: 'redis'
-  
-  - job_name: 'cadvisor'
-    static_configs:
-      - targets: ['cadvisor:8080']
+          service: 'loki'
 
-  - job_name: 'blackbox-exporter'
-    metrics_path: /probe
-    params:
-      module: [http_2xx]
-    static_configs:
-      - targets:
-        - http://redmica:3000
-        - http://grafana:3000
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
-      - target_label: __address__
-        replacement: blackbox-exporter:9115
+  # Comment out targets that don't expose metrics endpoints yet
+  # These would require exporters to be added to the docker-compose.yml
+  
+  # - job_name: 'postgres-exporter'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #       labels:
+  #         service: 'postgres'
+  
+  # - job_name: 'redis-exporter'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'
+          
+  # Docker metrics requires enabling the metrics endpoint in the Docker daemon
+  # - job_name: 'docker'
+  #   static_configs:
+  #     - targets: ['host.docker.internal:9323']
+  #       labels:
+  #         service: 'docker'
+          
+  # Fluent Bit metrics would need to be configured with a metrics endpoint
+  # - job_name: 'fluent-bit'
+  #   static_configs:
+  #     - targets: ['redstone-fluent-bit-1:2020']
+  #       labels:
+  #         service: 'logging'
+
