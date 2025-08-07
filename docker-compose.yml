@@ -13,6 +13,9 @@ services:
     restart: unless-stopped
     networks:
       - redstone-network
+    labels:
+      logging.service: "postgres"
+      logging.component: "database"
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -48,6 +51,9 @@ services:
     restart: unless-stopped
     networks:
       - redstone-network
+    labels:
+      logging.service: "redmica"
+      logging.component: "application"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
       interval: 30s
@@ -71,6 +77,9 @@ services:
     restart: on-failure
     networks:
       - redstone-network
+    labels:
+      logging.service: "redmica-init"
+      logging.component: "setup"
       
   # LDAP service for authentication (lldap)
   ldap:
@@ -88,6 +97,9 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
+    labels:
+      logging.service: "ldap"
+      logging.component: "authentication"
 
     healthcheck:
       test: ["CMD", "nc", "-z", "0.0.0.0", "3890"]
@@ -117,7 +129,9 @@ services:
       - "${GRAFANA_PORT:-3002}:3000"
     networks:
       - redstone-network
-
+    labels:
+      logging.service: "grafana"
+      logging.component: "monitoring"
     restart: unless-stopped
     depends_on:
       - prometheus
@@ -139,6 +153,9 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
+    labels:
+      logging.service: "prometheus"
+      logging.component: "monitoring"
 
   # Frontend service has been removed from streamlined deployment
 
@@ -158,6 +175,9 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
+    labels:
+      logging.service: "loki"
+      logging.component: "logging"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3100/ready"]
       interval: 30s
@@ -180,6 +200,9 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
+    labels:
+      logging.service: "fluent-bit"
+      logging.component: "logging"
 
   # Redis - Cache and message queue
   redis:
@@ -191,6 +214,9 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
+    labels:
+      logging.service: "redis"
+      logging.component: "cache"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
