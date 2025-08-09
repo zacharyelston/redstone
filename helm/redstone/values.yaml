@@ -278,13 +278,15 @@ prometheus:
     enabled: false
   nodeExporter:
     enabled: true
-    resources:
-      limits:
-        cpu: 100m
-        memory: 128Mi
-      requests:
-        cpu: 50m
-        memory: 64Mi
+    # Resource limits for node exporter pods
+    nodeExporter:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
 
 # Logging Configuration
 logging:
