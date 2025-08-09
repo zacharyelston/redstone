@@ -294,6 +294,24 @@ logging:
       fsGroup: 1000
       readOnlyRootFilesystem: false  # Fluent Bit needs write access for buffers
     
+    # Health probes for reliability
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 2020
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 2020
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+    
     config:
       service: |
         [SERVICE]
