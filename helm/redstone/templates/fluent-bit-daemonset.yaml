@@ -28,6 +28,14 @@ spec:
             - name: http
               containerPort: 2020
               protocol: TCP
+          {{- if .Values.logging.fluentBit.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.logging.fluentBit.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.logging.fluentBit.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.logging.fluentBit.readinessProbe | nindent 12 }}
+          {{- end }}
           resources:
             limits:
               cpu: 200m
