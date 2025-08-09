@@ -122,13 +122,12 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "builder",
-          "expr": "sum(count_over_time({service=\"redstone\"}[1m])) by (container_name)",
-          "legendFormat": "{{container_name}}",
+          "expr": "sum by (compose_service) (count_over_time({compose_service!=\"\"}[$__interval]))",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Log Volume by Container",
+      "title": "Log Volume by Service",
       "type": "timeseries"
     },
     {
@@ -161,7 +160,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "builder",
-          "expr": "{service=\"redstone\"}",
+          "expr": "{}",
           "queryType": "range",
           "refId": "A"
         }
@@ -212,7 +211,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "builder",
-          "expr": "{container_name=~\".*redmica.*\"}",
+          "expr": "{compose_service=\"redmica\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -263,7 +262,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "builder",
-          "expr": "{container_name=~\".*postgres.*\"}",
+          "expr": "{compose_service=\"postgres\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -314,7 +313,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "builder",
-          "expr": "{service=\"redstone\"} |= \"${search:}\"",
+          "expr": "{} |= \"${search:}\"",
           "queryType": "range",
           "refId": "A"
         }

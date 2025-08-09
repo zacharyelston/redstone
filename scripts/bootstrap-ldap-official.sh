@@ -17,10 +17,24 @@ WARNING="⚠️"
 INFO="ℹ️"
 SECURE="🔐"
 
-# Default configuration
-BOOTSTRAP_DIR="/Users/zacelston/AlZacAI/redstone/components/ldap/bootstrap"
-CONFIG_FILE="/Users/zacelston/AlZacAI/redstone/components/ldap/ldap-defaults.yaml"
+# Default configuration - use relative paths for portability
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BOOTSTRAP_DIR="$PROJECT_ROOT/components/ldap/bootstrap"
+CONFIG_FILE="$PROJECT_ROOT/components/ldap/ldap-defaults.yaml"
 LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminadmin}
+LLDAP_ADMIN_USERNAME=${LLDAP_ADMIN_USERNAME:-admin}
+LLDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminadmin}
+
+# Ensure we're using the same password that LLDAP container is configured with
+# Check if container has LLDAP_LDAP_USER_PASS set and use that
+if command -v docker >/dev/null 2>&1; then
+    CONTAINER_LDAP_PASS=$(docker exec redstone-ldap-1 printenv LLDAP_LDAP_USER_PASS 2>/dev/null || echo "")
+    if [ -n "$CONTAINER_LDAP_PASS" ]; then
+        LLDAP_ADMIN_PASSWORD="$CONTAINER_LDAP_PASS"
+        echo -e "${INFO} Using LDAP password from container: $CONTAINER_LDAP_PASS"
+    fi
+fi
 DO_CLEANUP="false"
 
 # Print script banner
@@ -73,6 +87,7 @@ fi
 echo -e "${INFO} Using LLDAP API port: $API_PORT"
 
 LLDAP_API_URL="http://localhost:$API_PORT"
+LLDAP_URL="$LLDAP_API_URL"
 echo -e "${INFO} LLDAP API URL: ${LLDAP_API_URL}"
 
 # Validate bootstrap directory structure

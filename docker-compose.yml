@@ -13,9 +13,7 @@ services:
     restart: unless-stopped
     networks:
       - redstone-network
-    labels:
-      logging.service: "postgres"
-      logging.component: "database"
+    # Labels removed - using Loki external labels instead
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -51,9 +49,7 @@ services:
     restart: unless-stopped
     networks:
       - redstone-network
-    labels:
-      logging.service: "redmica"
-      logging.component: "application"
+    # Labels removed - using Loki external labels instead
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
       interval: 30s
@@ -77,9 +73,7 @@ services:
     restart: on-failure
     networks:
       - redstone-network
-    labels:
-      logging.service: "redmica-init"
-      logging.component: "setup"
+    # Labels removed - using Loki external labels instead
       
   # LDAP service for authentication (lldap)
   ldap:
@@ -97,9 +91,7 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
-    labels:
-      logging.service: "ldap"
-      logging.component: "authentication"
+    # Labels removed - using Loki external labels instead
 
     healthcheck:
       test: ["CMD", "nc", "-z", "0.0.0.0", "3890"]
@@ -129,9 +121,7 @@ services:
       - "${GRAFANA_PORT:-3002}:3000"
     networks:
       - redstone-network
-    labels:
-      logging.service: "grafana"
-      logging.component: "monitoring"
+    # Labels removed - using Loki external labels instead
     restart: unless-stopped
     depends_on:
       - prometheus
@@ -153,9 +143,7 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
-    labels:
-      logging.service: "prometheus"
-      logging.component: "monitoring"
+    # Labels removed - using Loki external labels instead
 
   # Frontend service has been removed from streamlined deployment
 
@@ -175,34 +163,14 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
-    labels:
-      logging.service: "loki"
-      logging.component: "logging"
+    # Labels removed - using Loki external labels instead
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3100/ready"]
       interval: 30s
       timeout: 5s
       retries: 3
 
-  # Fluent Bit - Log processor
-  fluent-bit:
-    image: fluent/fluent-bit:${FLUENT_BIT_VERSION:-2.1.8}
-    volumes:
-      - ./components/logging/fluent-bit:/fluent-bit/etc
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - LOKI_HOST=loki
-      - LOKI_PORT=3100
-    depends_on:
-      loki:
-        condition: service_started
-    networks:
-      - redstone-network
-    restart: unless-stopped
-    labels:
-      logging.service: "fluent-bit"
-      logging.component: "logging"
+  # Fluent Bit removed - using Docker Loki logging driver directly
 
   # Redis - Cache and message queue
   redis:
@@ -214,9 +182,7 @@ services:
     networks:
       - redstone-network
     restart: unless-stopped
-    labels:
-      logging.service: "redis"
-      logging.component: "cache"
+    # Labels removed - using Loki external labels instead
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

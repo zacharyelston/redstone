@@ -106,8 +106,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "editorMode": "code",
-          "expr": "sum by(service) (count_over_time({job=\"fluentbit\"} [5m]))",
+          "expr": "sum by(compose_service) (count_over_time({compose_service=~\".+\"} [5m]))",
           "legendFormat": "{{service}}",
           "queryType": "range",
           "refId": "A"

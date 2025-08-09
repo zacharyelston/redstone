@@ -1,20 +1,6 @@
 services:
   # PostgreSQL database for Redmica
   postgres:
-    image: postgres:${POSTGRES_VERSION:-15}
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_USER: postgres
-      POSTGRES_DB: redmica_production
-    volumes:
-      - ./storage/postgres:/var/lib/postgresql/data
-      - ./components/postgres/config:/docker-entrypoint-initdb.d
-    restart: unless-stopped
-    networks:
-      - redstone-network
-    labels:
-      logging.service: "postgres"
-      logging.component: "database"
     logging:
       driver: loki
       options:
@@ -23,38 +9,10 @@ services:
         loki-batch-size: "400"
         loki-timeout: "1s"
         mode: "non-blocking"
-        loki-external-labels: "service=postgres,component=database"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      ldap:
-        condition: service_started
+        loki-external-labels: "component=database"
 
   # Redmica - Redmine fork for project management with custom search features
   redmica:
-    image: redstone-redmica:custom
-    environment:
-      REDMINE_DB_DATABASE: redmica_production
-      REDMINE_DB_HOST: postgres
-      REDMINE_DB_USERNAME: postgres
-      REDMINE_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      REDMINE_DB_ADAPTER: postgresql
-      SECRET_KEY_BASE: ${REDMICA_SECRET_KEY_BASE:-changemeinproduction}
-      REDMINE_PLUGINS_MIGRATE: 'true'
-      REDMINE_API_KEY: ${REDMINE_API_KEY:-changethisinyourenv}
-    volumes:
-      - ./storage/redmica/files:/usr/src/redmine/files
-      - ./components/redmica/plugins:/usr/src/redmine/plugins
-      - ./components/redmica/themes:/usr/src/redmine/public/themes
-    restart: unless-stopped
-    networks:
-      - redstone-network
-    labels:
-      logging.service: "redmica"
-      logging.component: "application"
     logging:
       driver: loki
       options:
@@ -63,31 +21,22 @@ services:
         loki-batch-size: "400"
         loki-timeout: "1s"
         mode: "non-blocking"
-        loki-external-labels: "service=redmica,component=application"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    depends_on:
-      postgres:
-        condition: service_started
+        loki-external-labels: "component=application"
+
+  # Redmica Initialization - Applies trackers and enumerations
+  redmica-init:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=setup"
 
   # LDAP service for authentication (lldap)
   ldap:
-    image: lldap/lldap:stable
-    volumes:
-      - ./storage/ldap/lldap-data:/data
-    environment:
-      - LLDAP_JWT_SECRET=${LDAP_JWT_SECRET:-changemeinproduction}
-      - LLDAP_LDAP_USER_PASS=${LDAP_USER_PASS:-changemeinproduction}
-      - LLDAP_LDAP_BASE_DN=dc=example,dc=com
-    networks:
-      - redstone-network
-    restart: unless-stopped
-    labels:
-      logging.service: "ldap"
-      logging.component: "authentication"
     logging:
       driver: loki
       options:
@@ -96,26 +45,10 @@ services:
         loki-batch-size: "400"
         loki-timeout: "1s"
         mode: "non-blocking"
-        loki-external-labels: "service=ldap,component=authentication"
+        loki-external-labels: "component=authentication"
 
-  # Grafana for visualizations and dashboards
+  # Monitoring - Grafana
   grafana:
-    image: grafana/grafana:${GRAFANA_VERSION:-9.5.1}
-    volumes:
-      - ./components/monitoring/grafana/dashboards:/etc/grafana/dashboards
-      - ./components/monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - ./storage/grafana:/var/lib/grafana
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel
-    ports:
-      - "${GRAFANA_PORT:-3003}:3000"
-    networks:
-      - redstone-network
-    labels:
-      logging.service: "grafana"
-      logging.component: "visualization"
     logging:
       driver: loki
       options:
@@ -124,28 +57,10 @@ services:
         loki-batch-size: "400"
         loki-timeout: "1s"
         mode: "non-blocking"
-        loki-external-labels: "service=grafana,component=visualization"
-    restart: unless-stopped
+        loki-external-labels: "component=monitoring"
 
-  # Prometheus for metrics collection
+  # Monitoring - Prometheus
   prometheus:
-    image: prom/prometheus:${PROMETHEUS_VERSION:-v2.44.0}
-    volumes:
-      - ./components/monitoring/prometheus:/etc/prometheus
-      - ./storage/prometheus:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
-    networks:
-      - redstone-network
-    restart: unless-stopped
-    labels:
-      logging.service: "prometheus"
-      logging.component: "monitoring"
     logging:
       driver: loki
       options:
@@ -154,23 +69,10 @@ services:
         loki-batch-size: "400"
         loki-timeout: "1s"
         mode: "non-blocking"
-        loki-external-labels: "service=prometheus,component=monitoring"
+        loki-external-labels: "component=metrics"
 
-  # Loki for log aggregation
+  # Loki - Log aggregation
   loki:
-    image: grafana/loki:${LOKI_VERSION:-2.9.0}
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - ./storage/loki:/loki
-      - ./components/monitoring/loki:/etc/loki
-    ports:
-      - "${LOKI_PORT:-3100}:3100"
-    networks:
-      - redstone-network
-    restart: unless-stopped
-    labels:
-      logging.service: "loki"
-      logging.component: "logging"
     logging:
       driver: loki
       options:
@@ -179,21 +81,12 @@ services:
         loki-batch-size: "400"
         loki-timeout: "1s"
         mode: "non-blocking"
-        loki-external-labels: "service=loki,component=logging"
+        loki-external-labels: "component=logging"
+
+  # Fluent Bit removed - using Docker Loki logging driver directly
 
   # Redis - Cache and message queue
   redis:
-    image: redis:${REDIS_VERSION:-7-alpine}
-    volumes:
-      - ./storage/redis:/data
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    networks:
-      - redstone-network
-    restart: unless-stopped
-    labels:
-      logging.service: "redis"
-      logging.component: "cache"
     logging:
       driver: loki
       options:
@@ -202,8 +95,4 @@ services:
         loki-batch-size: "400"
         loki-timeout: "1s"
         mode: "non-blocking"
-        loki-external-labels: "service=redis,component=cache"
-
-networks:
-  redstone-network:
-    driver: bridge
+        loki-external-labels: "component=cache"
