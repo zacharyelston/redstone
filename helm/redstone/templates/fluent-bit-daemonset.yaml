@@ -15,7 +15,6 @@ spec:
     metadata:
       labels:
         {{- include "redstone.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/name: fluent-bit
         app.kubernetes.io/component: fluent-bit
         service: fluent-bit
         component: logging
