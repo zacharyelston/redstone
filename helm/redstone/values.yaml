@@ -41,6 +41,14 @@ redmica:
       cpu: 500m
       memory: 512Mi
   
+  # Security context temporarily removed for investigation
+  # securityContext:
+  #   runAsNonRoot: true
+  #   runAsUser: 1000
+  #   runAsGroup: 1000
+  #   fsGroup: 1000
+  #   readOnlyRootFilesystem: false
+  
   env:
     - name: REDMINE_DB_ADAPTER
       value: "postgresql"
@@ -66,6 +74,11 @@ redmica:
 # PostgreSQL Configuration (using Bitnami chart)
 postgresql:
   enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: "15.4.0-debian-11-r45"
+    pullPolicy: IfNotPresent
   auth:
     postgresPassword: "redstone123"
     username: "redmica"
@@ -85,7 +98,12 @@ postgresql:
 
 # Redis Configuration (using Bitnami chart)
 redis:
-  enabled: true
+  enabled: false
+  image:
+    registry: docker.io
+    repository: bitnami/redis
+    tag: "7.0.5-debian-11-r7"
+    pullPolicy: IfNotPresent
   auth:
     enabled: false
   master:
@@ -122,6 +140,14 @@ ldap:
     requests:
       cpu: 100m
       memory: 128Mi
+  
+  # Security context temporarily removed for investigation
+  # securityContext:
+  #   runAsNonRoot: true
+  #   runAsUser: 1001
+  #   runAsGroup: 1001
+  #   fsGroup: 1001
+  #   readOnlyRootFilesystem: false
   
   env:
     - name: LLDAP_HTTP_PORT
@@ -205,12 +231,28 @@ grafana:
         - name: Loki
           type: loki
           access: proxy
-          url: http://redstone-loki:3100
+          url: http://loki:3100
           isDefault: true
         - name: Prometheus
           type: prometheus
           access: proxy
           url: http://redstone-prometheus-server:80
+  
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'redstone-dashboards'
+          orgId: 1
+          folder: 'Redstone'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/redstone-dashboards
+  
+  dashboardsConfigMaps:
+    redstone-dashboards: "redstone-grafana-dashboards"
 
 # Prometheus Configuration (using Prometheus chart)
 prometheus:
@@ -226,6 +268,10 @@ prometheus:
       requests:
         cpu: 250m
         memory: 256Mi
+    # Add proper Kubernetes labels following best practices
+    podLabels:
+      app.kubernetes.io/name: prometheus
+      app.kubernetes.io/component: server
   alertmanager:
     enabled: false
   pushgateway:
@@ -237,8 +283,16 @@ logging:
   fluentBit:
     enabled: true
     image:
-      repository: fluent/fluent-bit
-      tag: "2.2.0"
+      repository: grafana/fluent-bit-plugin-loki
+      tag: "2.9.1-arm64"
+    
+    # Security context for non-root execution
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      readOnlyRootFilesystem: false  # Fluent Bit needs write access for buffers
     
     config:
       service: |
@@ -247,7 +301,6 @@ logging:
             Flush 1
             Log_Level info
             Parsers_File parsers.conf
-            Plugins_File plugins.conf
             HTTP_Server On
             HTTP_Listen 0.0.0.0
             HTTP_Port 2020
@@ -278,16 +331,16 @@ logging:
             Labels On
         
         [FILTER]
-            Name modify
+            Name grep
             Match kube.*
-            Add service ${kubernetes['labels']['app.kubernetes.io/name']}
-            Add component ${kubernetes['labels']['app.kubernetes.io/component']}
+            Exclude kubernetes_labels_app_kubernetes_io_name loki
+
       
       outputs: |
         [OUTPUT]
             Name loki
             Match kube.*
-            Host redstone-loki
+            Host loki
             Port 3100
-            Labels job=fluentbit, service=$service, component=$component
+            Labels job=fluentbit
             Auto_Kubernetes_Labels On
