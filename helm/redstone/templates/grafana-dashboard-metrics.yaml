@@ -35,7 +35,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "PBFA97CFB590B2093"
           },
           "fieldConfig": {
             "defaults": {
@@ -110,7 +110,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "PBFA97CFB590B2093"
               },
               "expr": "rate(container_cpu_usage_seconds_total{namespace=\"redstone\", container!=\"POD\", container!=\"\"}[5m]) * 100",
               "interval": "",
@@ -124,7 +124,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "PBFA97CFB590B2093"
           },
           "fieldConfig": {
             "defaults": {
@@ -199,7 +199,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "PBFA97CFB590B2093"
               },
               "expr": "container_memory_usage_bytes{namespace=\"redstone\", container!=\"POD\", container!=\"\"}",
               "interval": "",
@@ -213,7 +213,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "PBFA97CFB590B2093"
           },
           "fieldConfig": {
             "defaults": {
@@ -286,7 +286,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "PBFA97CFB590B2093"
               },
               "expr": "kube_pod_status_ready{namespace=\"redstone\"}",
               "format": "table",
@@ -322,7 +322,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "PBFA97CFB590B2093"
           },
           "fieldConfig": {
             "defaults": {
@@ -383,7 +383,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "PBFA97CFB590B2093"
               },
               "expr": "kube_pod_container_status_restarts_total{namespace=\"redstone\"}",
               "format": "table",
@@ -421,7 +421,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "PBFA97CFB590B2093"
           },
           "fieldConfig": {
             "defaults": {
@@ -487,7 +487,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "PBFA97CFB590B2093"
               },
               "expr": "kube_pod_status_ready{namespace=\"redstone\"}",
               "interval": "",
