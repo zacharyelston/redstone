@@ -268,6 +268,7 @@ grafana:
   
   dashboardsConfigMaps:
     redstone-dashboards: "redstone-grafana-dashboards"
+    redstone-metrics: "redstone-grafana-dashboard-metrics"
 
 # Prometheus Configuration (using Prometheus chart)
 prometheus:
