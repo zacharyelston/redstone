@@ -33,3 +33,8 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Environment files with sensitive data
+.env
+customers/*.env
+*.env
