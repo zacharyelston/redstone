@@ -273,10 +273,19 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/redstone-metrics
+        - name: 'redstone-working'
+          orgId: 1
+          folder: 'Redstone'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/redstone-working
   
   dashboardsConfigMaps:
     redstone-dashboards: "redstone-grafana-dashboards"
     redstone-metrics: "redstone-grafana-dashboard-metrics"
+    redstone-working: "redstone-grafana-dashboard-working"
 
 # Prometheus Configuration (using Prometheus chart)
 prometheus:
