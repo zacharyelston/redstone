@@ -265,6 +265,14 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/redstone-dashboards
+        - name: 'redstone-metrics'
+          orgId: 1
+          folder: 'Redstone'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/redstone-metrics
   
   dashboardsConfigMaps:
     redstone-dashboards: "redstone-grafana-dashboards"
