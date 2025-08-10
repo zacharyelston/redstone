@@ -4,18 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "redstone.fullname" . }}-redmica
   labels:
-    {{- include "redstone.labels" . | nindent 4 }}
+    {{- include "redstone.serviceLabels" (dict "serviceName" "redmica" "context" .) | nindent 4 }}
     app.kubernetes.io/component: redmica
 spec:
   replicas: {{ .Values.redmica.replicaCount }}
   selector:
     matchLabels:
-      {{- include "redstone.selectorLabels" . | nindent 6 }}
+      {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "redmica" "context" .) | nindent 6 }}
       app.kubernetes.io/component: redmica
   template:
     metadata:
       labels:
-        {{- include "redstone.selectorLabels" . | nindent 8 }}
+        {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "redmica" "context" .) | nindent 8 }}
         app.kubernetes.io/component: redmica
         service: redmica
         component: application
