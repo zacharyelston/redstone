@@ -350,6 +350,14 @@ logging:
             Tag kube.*
             Mem_Buf_Limit 50MB
             Skip_Long_Lines On
+        
+        [INPUT]
+            Name tail
+            Path /var/log/containers/*postgresql*.log
+            multiline.parser docker, cri
+            Tag kube.postgresql
+            Mem_Buf_Limit 50MB
+            Skip_Long_Lines On
       
       filters: |
         [FILTER]
