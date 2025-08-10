@@ -71,7 +71,7 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "redstone.serviceSelectorLabels" "redmica" | nindent 4 }}
+    {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "redmica" "context" .) | nindent 4 }}
 {{- end }}
 ---
 {{- if .Values.redmica.enabled }}
