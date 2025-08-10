@@ -1,0 +1,162 @@
+{{- if .Values.redmica.enabled }}
+---
+# Redmica Deployment - Built for Clarity
+# Clean, purpose-built deployment for Redmica project management
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redmica
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: redmica
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: project-management
+    app.kubernetes.io/part-of: redstone
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.redmica.replicaCount | default 1 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redmica
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redmica
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: project-management
+        app.kubernetes.io/part-of: redstone
+    spec:
+      {{- with .Values.redmica.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: redmica
+        image: "{{ .Values.redmica.image.repository }}:{{ .Values.redmica.image.tag }}"
+        imagePullPolicy: {{ .Values.redmica.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        env:
+        {{- range .Values.redmica.env }}
+        - name: {{ .name }}
+          {{- if .value }}
+          value: {{ .value | quote }}
+          {{- else if .valueFrom }}
+          valueFrom:
+            {{- toYaml .valueFrom | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- with .Values.redmica.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.redmica.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.redmica.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        - name: redmica-data
+          mountPath: /redmica/files
+        - name: redmica-logs
+          mountPath: /redmica/log
+        - name: redmica-tmp
+          mountPath: /redmica/tmp
+      volumes:
+      - name: redmica-data
+        {{- if .Values.redmica.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: redmica-data
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      - name: redmica-logs
+        {{- if .Values.redmica.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: redmica-logs
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      - name: redmica-tmp
+        emptyDir: {}
+---
+# Redmica Service - Clean, purpose-built service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redmica
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: redmica
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: project-management
+    app.kubernetes.io/part-of: redstone
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.redmica.service.type | default "ClusterIP" }}
+  ports:
+  - port: {{ .Values.redmica.service.port | default 3000 }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: redmica
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- if .Values.redmica.persistence.enabled }}
+---
+# Redmica Data PVC - Clean, purpose-built storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redmica-data
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: redmica
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: project-management
+    app.kubernetes.io/part-of: redstone
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.redmica.persistence.size | default "5Gi" }}
+  {{- if .Values.redmica.persistence.storageClass }}
+  storageClassName: {{ .Values.redmica.persistence.storageClass }}
+  {{- end }}
+---
+# Redmica Logs PVC - Clean, purpose-built log storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redmica-logs
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: redmica
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: project-management
+    app.kubernetes.io/part-of: redstone
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.redmica.persistence.logSize | default "1Gi" }}
+  {{- if .Values.redmica.persistence.storageClass }}
+  storageClassName: {{ .Values.redmica.persistence.storageClass }}
+  {{- end }}
+{{- end }}
+{{- end }}

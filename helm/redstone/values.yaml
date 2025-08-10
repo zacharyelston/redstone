@@ -9,46 +9,63 @@ global:
 # Redmica (Redmine fork) Configuration
 redmica:
   enabled: true
+  
+  # Local Redmica image built from source
   image:
-    repository: redmica/redmica
-    tag: "latest"
-    pullPolicy: IfNotPresent
+    repository: redmica
+    tag: "local"
+    pullPolicy: Never
   
   replicaCount: 1
   
+  # Service configuration - clean, simple
   service:
     type: ClusterIP
     port: 3000
-    targetPort: 3000
   
-  ingress:
-    enabled: true
-    className: "nginx"
-    annotations:
-      nginx.ingress.kubernetes.io/rewrite-target: /
-    hosts:
-      - host: redstone.local
-        paths:
-          - path: /
-            pathType: Prefix
-    tls: []
-  
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 1Gi
-    requests:
-      cpu: 500m
-      memory: 512Mi
-  
-  # Security context temporarily removed for investigation
+  # Security context for production readiness (temporarily disabled for debugging)
   # securityContext:
   #   runAsNonRoot: true
   #   runAsUser: 1000
   #   runAsGroup: 1000
   #   fsGroup: 1000
-  #   readOnlyRootFilesystem: false
   
+  # Health probes for reliability
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  # Resource limits for stability
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  
+  # Persistence for data and logs
+  persistence:
+    enabled: true
+    size: 5Gi
+    logSize: 1Gi
+    # storageClass: ""  # Use default
+  
+  # Environment configuration - clean, explicit
   env:
     - name: RAILS_ENV
       value: "production"
@@ -71,11 +88,6 @@ redmica:
       value: "redmica"
     - name: REDMINE_DB_PASSWORD
       value: "redmica123"
-    - name: REDMINE_SECRET_KEY_BASE
-      valueFrom:
-        secretKeyRef:
-          name: redstone-secrets
-          key: secret-key-base
 
 # PostgreSQL Configuration (using Bitnami chart)
 # Disable Bitnami PostgreSQL chart to use our custom StatefulSet
