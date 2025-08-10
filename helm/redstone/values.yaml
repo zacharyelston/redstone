@@ -363,7 +363,7 @@ logging:
             Name tail
             Path /var/log/containers/*postgresql*.log
             multiline.parser docker, cri
-            Tag kube.postgresql
+            Tag kube.var.log.containers.postgresql
             Mem_Buf_Limit 50MB
             Skip_Long_Lines On
       
