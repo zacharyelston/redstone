@@ -7,7 +7,7 @@ metadata:
     {{- include "redstone.labels" . | nindent 4 }}
     grafana_dashboard: "1"
 data:
-  redstone-service-metrics.json: |
+  redstone-service-metrics.json: |-
     {
       "annotations": {
         "list": [
@@ -114,7 +114,7 @@ data:
               },
               "expr": "rate(container_cpu_usage_seconds_total{namespace=\"redstone\", container!=\"POD\", container!=\"\"}[5m]) * 100",
               "interval": "",
-              "legendFormat": "{{pod}} - {{container}}",
+              "legendFormat": "{{ "{{" }}pod{{ "}}" }} - {{ "{{" }}container{{ "}}" }}",
               "refId": "A"
             }
           ],
@@ -203,7 +203,7 @@ data:
               },
               "expr": "container_memory_usage_bytes{namespace=\"redstone\", container!=\"POD\", container!=\"\"}",
               "interval": "",
-              "legendFormat": "{{pod}} - {{container}}",
+              "legendFormat": "{{ "{{" }}pod{{ "}}" }} - {{ "{{" }}container{{ "}}" }}",
               "refId": "A"
             }
           ],
@@ -426,129 +426,6 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "vis": false
-                }
-              },
-              "mappings": []
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 16
-          },
-          "id": 5,
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom"
-            },
-            "pieType": "pie",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "expr": "avg by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"redstone\", container!=\"POD\", container!=\"\"}[5m]) * 100)",
-              "interval": "",
-              "legendFormat": "{{pod}}",
-              "refId": "A"
-            }
-          ],
-          "title": "CPU Usage Distribution",
-          "type": "piechart"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "vis": false
-                }
-              },
-              "mappings": [],
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 16
-          },
-          "id": 6,
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom"
-            },
-            "pieType": "pie",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "expr": "avg by (pod) (container_memory_usage_bytes{namespace=\"redstone\", container!=\"POD\", container!=\"\"})",
-              "interval": "",
-              "legendFormat": "{{pod}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Memory Usage Distribution",
-          "type": "piechart"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
                 "mode": "thresholds"
               },
               "mappings": [
@@ -588,9 +465,9 @@ data:
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 24
+            "y": 16
           },
-          "id": 7,
+          "id": 5,
           "options": {
             "colorMode": "background",
             "graphMode": "area",
@@ -614,7 +491,7 @@ data:
               },
               "expr": "kube_pod_status_ready{namespace=\"redstone\"}",
               "interval": "",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{ "{{" }}pod{{ "}}" }}",
               "refId": "A"
             }
           ],
