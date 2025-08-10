@@ -1,0 +1,85 @@
+{{- if .Values.postgresqlCustom.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "redstone.fullname" . }}-postgresql-custom
+  labels:
+    {{- include "redstone.serviceLabels" (dict "serviceName" "postgresql" "context" .) | nindent 4 }}
+spec:
+  serviceName: {{ include "redstone.fullname" . }}-postgresql-custom
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "postgresql" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "redstone.serviceLabels" (dict "serviceName" "postgresql" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: postgresql
+          image: "postgres:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresqlCustom.auth.database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgresqlCustom.auth.username | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgresqlCustom.auth.password | quote }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            {{- toYaml .Values.postgresqlCustom.primary.resources | nindent 12 }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U {{ .Values.postgresqlCustom.auth.username | quote }} -d {{ .Values.postgresqlCustom.auth.database | quote }} -h 127.0.0.1 -p 5432
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U {{ .Values.postgresqlCustom.auth.username | quote }} -d {{ .Values.postgresqlCustom.auth.database | quote }} -h 127.0.0.1 -p 5432
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.postgresqlCustom.primary.persistence.size }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "redstone.fullname" . }}-postgresql-custom
+  labels:
+    {{- include "redstone.serviceLabels" (dict "serviceName" "postgresql" "context" .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgresql
+  selector:
+    {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "postgresql" "context" .) | nindent 4 }}
+{{- end }}

@@ -62,7 +62,7 @@ redmica:
     - name: REDMINE_DB_ADAPTER
       value: "postgresql"
     - name: REDMINE_DB_HOST
-      value: "redstone-postgresql"
+      value: "redstone-postgresql-custom"
     - name: REDMINE_DB_PORT
       value: "5432"
     - name: REDMINE_DB_DATABASE
@@ -70,10 +70,7 @@ redmica:
     - name: REDMINE_DB_USERNAME
       value: "redmica"
     - name: REDMINE_DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: redstone-postgresql
-          key: postgres-password
+      value: "redmica123"
     - name: REDMINE_SECRET_KEY_BASE
       valueFrom:
         secretKeyRef:
@@ -81,18 +78,29 @@ redmica:
           key: secret-key-base
 
 # PostgreSQL Configuration (using Bitnami chart)
+# Disable Bitnami PostgreSQL chart to use our custom StatefulSet
 postgresql:
+  enabled: false
+
+# Custom PostgreSQL configuration for standard postgres:latest container
+postgresqlCustom:
   enabled: true
-  image:
-    registry: docker.io
-    repository: bitnami/postgresql
-    tag: "15.4.0-debian-11-r45"
-    pullPolicy: IfNotPresent
   auth:
     postgresPassword: "redstone123"
     username: "redmica"
     password: "redmica123"
     database: "redmica"
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
   primary:
     persistence:
       enabled: true
