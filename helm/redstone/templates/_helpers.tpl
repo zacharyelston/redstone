@@ -51,6 +51,29 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Service-specific labels for individual components
+Usage: {{ include "redstone.serviceLabels" (dict "serviceName" "fluent-bit" "context" .) }}
+*/}}
+{{- define "redstone.serviceLabels" -}}
+app.kubernetes.io/name: {{ .serviceName }}
+app.kubernetes.io/instance: {{ .context.Release.Name }}
+{{- if .context.Chart.AppVersion }}
+app.kubernetes.io/version: {{ .context.Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .context.Release.Service }}
+helm.sh/chart: {{ include "redstone.chart" .context }}
+{{- end }}
+
+{{/*
+Service-specific selector labels for individual components
+Usage: {{ include "redstone.serviceSelectorLabels" (dict "serviceName" "fluent-bit" "context" .) }}
+*/}}
+{{- define "redstone.serviceSelectorLabels" -}}
+app.kubernetes.io/name: {{ .serviceName }}
+app.kubernetes.io/instance: {{ .context.Release.Name }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "redstone.serviceAccountName" -}}
