@@ -73,6 +73,12 @@ spec:
           mountPath: /redmica/log
         - name: redmica-tmp
           mountPath: /redmica/tmp
+        - name: redmica-config
+          mountPath: /redmica/config/database.yml
+          subPath: database.yml
+        - name: redmica-config
+          mountPath: /redmica/config/configuration.yml
+          subPath: configuration.yml
       volumes:
       - name: redmica-data
         {{- if .Values.redmica.persistence.enabled }}
@@ -90,6 +96,9 @@ spec:
         {{- end }}
       - name: redmica-tmp
         emptyDir: {}
+      - name: redmica-config
+        configMap:
+          name: redmica-config
 ---
 # Redmica Service - Clean, purpose-built service
 apiVersion: v1

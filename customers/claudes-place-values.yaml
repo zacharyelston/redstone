@@ -1,0 +1,65 @@
+# Customer-specific Helm values for Claude's Place
+global:
+  customerName: "Claude's Place"
+  customerIdentifier: "claudes-place"
+  namespace: "redstone-claudes-place"
+
+redmica:
+  image:
+    repository: redmica
+    tag: local
+  
+  environment:
+    CUSTOMER_NAME: "Claude's Place"
+    CUSTOMER_IDENTIFIER: "claudes-place"
+    ADMIN_EMAIL: "admin@claudes-place.com"
+    DEFAULT_LANGUAGE: "en"
+    TIMEZONE: "UTC"
+    
+  persistence:
+    enabled: true
+    size: 10Gi
+    
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+postgresql:
+  enabled: true
+  auth:
+    database: "redmica_claudes-place"
+    username: "redmica"
+    password: "liLP/MMjV0fMKgqOQssRew=="
+    
+  persistence:
+    enabled: true
+    size: 20Gi
+
+ldap:
+  enabled: true
+  domain: "claudes-place.local"
+  baseDn: "dc=claudes-place,dc=local"
+  
+grafana:
+  enabled: true
+  adminPassword: "9OjkKdM5q05rEpn/"
+  
+  dashboards:
+    default:
+      redstone-customer:
+        gnetId: 1
+        revision: 1
+        datasource: prometheus
+
+prometheus:
+  enabled: true
+  
+loki:
+  enabled: true
+  
+fluent-bit:
+  enabled: true

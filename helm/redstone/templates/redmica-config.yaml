@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redmica-config
+  namespace: {{ .Release.Namespace }}
+data:
+  database.yml: |
+    production:
+      adapter: postgresql
+      database: redmica
+      host: redstone-postgresql-custom
+      username: redmica
+      password: redmica123
+      encoding: utf8
+      pool: 5
+      timeout: 5000
+  configuration.yml: |
+    production:
+      ldap:
+        enabled: true
+        host: redstone-ldap
+        port: 3890
+        account: 'uid=admin,ou=people,dc=redstone,dc=local'
+        password: 'adminadmin'
+        base_dn: 'ou=people,dc=redstone,dc=local'
+        attr_login: uid
+        attr_firstname: givenname
+        attr_lastname: sn
+        attr_mail: mail
