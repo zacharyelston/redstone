@@ -50,6 +50,10 @@ redmica:
   #   readOnlyRootFilesystem: false
   
   env:
+    - name: RAILS_ENV
+      value: "development"
+    - name: RACK_ENV
+      value: "development"
     - name: REDMINE_DB_ADAPTER
       value: "postgresql"
     - name: REDMINE_DB_HOST
