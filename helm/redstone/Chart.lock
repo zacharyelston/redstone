@@ -1,0 +1,18 @@
+dependencies:
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.9
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 17.3.7
+- name: loki
+  repository: https://grafana.github.io/helm-charts
+  version: 4.4.2
+- name: grafana
+  repository: https://grafana.github.io/helm-charts
+  version: 6.50.7
+- name: prometheus
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 19.6.1
+digest: sha256:e6e3cd17332d337bf78f4e4bb4588e70210eab4f9b5100fc2466022212c5e584
+generated: "2025-08-09T14:44:20.44732-04:00"
