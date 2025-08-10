@@ -51,9 +51,14 @@ redmica:
   
   env:
     - name: RAILS_ENV
-      value: "development"
+      value: "production"
     - name: RACK_ENV
-      value: "development"
+      value: "production"
+    - name: SECRET_KEY_BASE
+      valueFrom:
+        secretKeyRef:
+          name: redstone-secrets
+          key: secret-key-base
     - name: REDMINE_DB_ADAPTER
       value: "postgresql"
     - name: REDMINE_DB_HOST
