@@ -71,8 +71,7 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "redstone.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: redmica
+    {{- include "redstone.serviceSelectorLabels" "redmica" | nindent 4 }}
 {{- end }}
 ---
 {{- if .Values.redmica.enabled }}
