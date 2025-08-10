@@ -1,0 +1,13 @@
+{
+  "id": "developer_user",
+  "email": "developer@redstone.local",
+  "password": "devpassword",
+  "displayName": "Redstone Developer",
+  "firstName": "Redstone",
+  "lastName": "Developer",
+  "groups": [
+    "developers",
+    "redmine_users",
+    "grafana_editors"
+  ]
+}

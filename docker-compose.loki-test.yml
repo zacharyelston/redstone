@@ -1,0 +1,31 @@
+services:
+  # Test service for Loki URL configuration
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-15}
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: postgres
+      POSTGRES_DB: redmica_production
+    volumes:
+      - ./storage/postgres:/var/lib/postgresql/data
+      - ./components/postgres/config:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    networks:
+      - redstone-network
+    labels:
+      logging.service: "postgres"
+      logging.component: "database"
+    logging:
+      driver: loki
+      options:
+        # Using host.docker.internal to reference host machine from within container
+        loki-url: "http://host.docker.internal:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "service=postgres,component=database"
+
+networks:
+  redstone-network:
+    external: true

@@ -1,0 +1,164 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  PROJECT_NAME: redstone
+  NAMESPACE: redstone
+  HELM_CHART: ./helm/redstone
+
+tasks:
+  setup:
+    desc: "Complete Kubernetes environment setup"
+    cmds:
+      - echo "🚀 Setting up Kubernetes environment..."
+      - kubectl create namespace {{.NAMESPACE}} --dry-run=client -o yaml | kubectl apply -f -
+      - echo "✅ Namespace created"
+
+  deploy:
+    desc: "Deploy to Kubernetes with Helm"
+    cmds:
+      - echo "🚀 Deploying Redstone to Kubernetes..."
+      - cd {{.HELM_CHART}} && helm upgrade --install {{.PROJECT_NAME}} . --namespace {{.NAMESPACE}} --values values.yaml
+      - echo "⏳ Waiting for pods to be ready..."
+      - kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance={{.PROJECT_NAME}} -n {{.NAMESPACE}} --timeout=300s
+      - echo "✅ Deployment complete"
+
+  deploy-dev:
+    desc: "Deploy development environment to Kubernetes"
+    cmds:
+      - echo "🚀 Deploying development environment..."
+      - cd {{.HELM_CHART}} && helm upgrade --install {{.PROJECT_NAME}} . --namespace {{.NAMESPACE}} --values values.yaml --set global.environment=development
+      - kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance={{.PROJECT_NAME}} -n {{.NAMESPACE}} --timeout=300s
+      - echo "✅ Development deployment complete"
+
+  deploy-prod:
+    desc: "Deploy production environment to Kubernetes"
+    cmds:
+      - echo "🚀 Deploying production environment..."
+      - cd {{.HELM_CHART}} && helm upgrade --install {{.PROJECT_NAME}} . --namespace {{.NAMESPACE}} --values values.yaml --set global.environment=production
+      - kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance={{.PROJECT_NAME}} -n {{.NAMESPACE}} --timeout=300s
+      - echo "✅ Production deployment complete"
+
+  status:
+    desc: "Check Kubernetes service status"
+    cmds:
+      - echo "📊 Checking service status..."
+      - kubectl get pods -n {{.NAMESPACE}}
+      - echo ""
+      - kubectl get services -n {{.NAMESPACE}}
+      - echo ""
+      - kubectl get pvc -n {{.NAMESPACE}}
+
+  logs:
+    desc: "View service logs"
+    cmds:
+      - echo "📋 Available services:"
+      - kubectl get pods -n {{.NAMESPACE}} --no-headers | awk '{print $1}'
+      - echo ""
+      - echo "Usage: task --taskfile Taskfile.k8s.yml logs SERVICE=<pod-name>"
+
+  logs-redmica:
+    desc: "View Redmica logs"
+    cmds:
+      - kubectl logs -l app.kubernetes.io/name=redmica -n {{.NAMESPACE}} --tail=50 -f
+
+  logs-ldap:
+    desc: "View LDAP logs"
+    cmds:
+      - kubectl logs -l app.kubernetes.io/name=ldap -n {{.NAMESPACE}} --tail=50 -f
+
+  logs-postgresql:
+    desc: "View PostgreSQL logs"
+    cmds:
+      - kubectl logs -l app.kubernetes.io/name=postgresql -n {{.NAMESPACE}} --tail=50 -f
+
+  test-ldap:
+    desc: "Test LDAP authentication"
+    cmds:
+      - echo "🔐 Testing LDAP authentication..."
+      - kubectl exec -n {{.NAMESPACE}} deployment/redstone-ldap -- curl -s -X POST "http://localhost:17170/auth/simple/login" -H "Content-Type: application/json" -d '{"username":"admin","password":"admin123"}' | jq .
+
+  restart:
+    desc: "Restart services"
+    cmds:
+      - echo "🔄 Restarting services..."
+      - |
+        if [ -n "{{.SERVICE}}" ]; then
+          kubectl rollout restart deployment/{{.SERVICE}} -n {{.NAMESPACE}}
+        else
+          kubectl rollout restart deployment -n {{.NAMESPACE}}
+        fi
+      - echo "✅ Restart initiated"
+
+  restart-redmica:
+    desc: "Restart Redmica service"
+    cmds:
+      - kubectl rollout restart deployment/redstone-redmica -n {{.NAMESPACE}}
+
+  restart-grafana:
+    desc: "Restart Grafana service"
+    cmds:
+      - kubectl rollout restart deployment/redstone-grafana -n {{.NAMESPACE}}
+
+  port-forward:
+    desc: "Start port-forwards for local access"
+    cmds:
+      - echo "🌐 Starting port-forwards..."
+      - kubectl port-forward svc/redstone-grafana 3000:3000 -n {{.NAMESPACE}} &
+      - kubectl port-forward svc/loki 3100:3100 -n {{.NAMESPACE}} &
+      - kubectl port-forward svc/redstone-redmica 8080:3000 -n {{.NAMESPACE}} &
+      - echo "✅ Port-forwards started:"
+      - echo "  Grafana: http://localhost:3000"
+      - echo "  Loki: http://localhost:3100"
+      - echo "  Redmica: http://localhost:8080"
+
+  stop-port-forward:
+    desc: "Stop all port-forwards"
+    cmds:
+      - pkill -f "kubectl port-forward" || echo "No port-forwards running"
+
+  backup:
+    desc: "Backup PostgreSQL data"
+    cmds:
+      - echo "💾 Creating PostgreSQL backup..."
+      - kubectl exec -n {{.NAMESPACE}} statefulset/redstone-postgresql-custom -- pg_dump -U redmica redmica > backup-$(date +%Y%m%d-%H%M%S).sql
+      - echo "✅ Backup complete"
+
+  restore:
+    desc: "Restore PostgreSQL data"
+    cmds:
+      - echo "📥 Restoring PostgreSQL data..."
+      - echo "Usage: task restore BACKUP_FILE=<backup-file.sql>"
+      - |
+        if [ -n "{{.BACKUP_FILE}}" ]; then
+          kubectl exec -i -n {{.NAMESPACE}} statefulset/redstone-postgresql-custom -- psql -U redmica redmica < {{.BACKUP_FILE}}
+          echo "✅ Restore complete"
+        else
+          echo "Please specify BACKUP_FILE=<backup-file.sql>"
+        fi
+
+  clean:
+    desc: "Clean up Kubernetes resources"
+    cmds:
+      - echo "🧹 Cleaning up resources..."
+      - helm uninstall {{.PROJECT_NAME}} -n {{.NAMESPACE}} || echo "Helm release not found"
+      - kubectl delete namespace {{.NAMESPACE}} --ignore-not-found=true
+      - echo "✅ Cleanup complete"
+
+  dashboard:
+    desc: "Open Grafana dashboard"
+    cmds:
+      - echo "📊 Opening Grafana dashboard..."
+      - task: port-forward
+      - echo "Dashboard available at: http://localhost:3000"
+      - echo "Login: admin / admin123"
+
+  health:
+    desc: "Check overall system health"
+    cmds:
+      - echo "🏥 Checking system health..."
+      - kubectl get pods -n {{.NAMESPACE}} --field-selector=status.phase!=Running
+      - echo ""
+      - echo "📊 Resource usage:"
+      - kubectl top pods -n {{.NAMESPACE}} || echo "Metrics server not available"

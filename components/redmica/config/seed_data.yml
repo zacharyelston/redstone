@@ -1,0 +1,145 @@
+---
+# Redmine Seed Data for Redstone Project
+# This file defines trackers, issue statuses, and other enumerations
+# that will be loaded during initialization
+
+# Trackers definition
+trackers:
+  - name: "Bug"
+    position: 1
+    default_status_id: 1
+    is_in_roadmap: false
+    description: "Software defect requiring resolution"
+    
+  - name: "Epic"
+    position: 2
+    default_status_id: 1
+    is_in_roadmap: true
+    description: "Large work initiative requiring breakdown into smaller stories"
+    
+  - name: "Story" 
+    position: 3
+    default_status_id: 1
+    is_in_roadmap: true
+    description: "User story representing a discrete feature or enhancement"
+    
+  - name: "Feature"
+    position: 4
+    default_status_id: 1
+    is_in_roadmap: true
+    description: "New functionality to be added to the system"
+    
+  - name: "Support"
+    position: 5
+    default_status_id: 1
+    is_in_roadmap: false
+    description: "Request for assistance or information"
+    
+  - name: "Task"
+    position: 6
+    default_status_id: 1
+    is_in_roadmap: true
+    description: "Work item that doesn't fit other categories"
+
+# Issue statuses
+issue_statuses:
+  - name: "New"
+    position: 1
+    is_closed: false
+    is_default: true
+    
+  - name: "In Progress"
+    position: 2
+    is_closed: false
+    is_default: false
+    
+  - name: "Resolved"
+    position: 3
+    is_closed: false
+    is_default: false
+    
+  - name: "Feedback"
+    position: 4
+    is_closed: false
+    is_default: false
+    
+  - name: "Closed"
+    position: 5
+    is_closed: true
+    is_default: false
+    
+  - name: "Rejected"
+    position: 6
+    is_closed: true
+    is_default: false
+
+# Issue priorities
+issue_priorities:
+  - name: "Low"
+    position: 1
+    is_default: false
+    active: true
+    
+  - name: "Normal"
+    position: 2
+    is_default: true
+    active: true
+    
+  - name: "High"
+    position: 3
+    is_default: false
+    active: true
+    
+  - name: "Urgent"
+    position: 4
+    is_default: false
+    active: true
+    
+  - name: "Immediate"
+    position: 5
+    is_default: false
+    active: true
+
+# Time entry activities
+time_entry_activities:
+  - name: "Design"
+    position: 1
+    is_default: false
+    active: true
+    
+  - name: "Development"
+    position: 2
+    is_default: true
+    active: true
+    
+  - name: "Testing"
+    position: 3
+    is_default: false
+    active: true
+    
+  - name: "Documentation"
+    position: 4
+    is_default: false
+    active: true
+    
+  - name: "Management"
+    position: 5
+    is_default: false
+    active: true
+
+# Document categories
+document_categories:
+  - name: "Technical"
+    position: 1
+    is_default: false
+    active: true
+    
+  - name: "User"
+    position: 2
+    is_default: false
+    active: true
+    
+  - name: "Administrative"
+    position: 3
+    is_default: false
+    active: true

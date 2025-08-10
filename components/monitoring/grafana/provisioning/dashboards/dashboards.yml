@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'Redstone Dashboards'
+    orgId: 1
+    folder: 'Redstone'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards

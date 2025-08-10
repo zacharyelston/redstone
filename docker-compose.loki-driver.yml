@@ -1,0 +1,98 @@
+services:
+  # PostgreSQL database for Redmica
+  postgres:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=database"
+
+  # Redmica - Redmine fork for project management with custom search features
+  redmica:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=application"
+
+  # Redmica Initialization - Applies trackers and enumerations
+  redmica-init:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=setup"
+
+  # LDAP service for authentication (lldap)
+  ldap:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=authentication"
+
+  # Monitoring - Grafana
+  grafana:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=monitoring"
+
+  # Monitoring - Prometheus
+  prometheus:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=metrics"
+
+  # Loki - Log aggregation
+  loki:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=logging"
+
+  # Fluent Bit removed - using Docker Loki logging driver directly
+
+  # Redis - Cache and message queue
+  redis:
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-retries: "5"
+        loki-batch-size: "400"
+        loki-timeout: "1s"
+        mode: "non-blocking"
+        loki-external-labels: "component=cache"

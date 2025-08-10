@@ -1,5 +1,5 @@
 # Redstone
-
+![Redstone Architecture Diagram](docs/redstone-diagram.png)
 A modular, cloud-native application designed for flexible deployment on AWS EKS and Release.com.
 
 ## Overview
@@ -44,8 +44,94 @@ Redstone is built according to the "Built for Clarity" design philosophy, emphas
 
 1. Clone this repository
 2. Copy `.env.example` to `.env` and adjust variables as needed
-3. Run `docker-compose up` to start all services locally
-4. Access the application at http://localhost:8080
+3. Run `task setup` to initialize the environment with core services and LDAP configuration
+4. Run `docker-compose up` to start all services locally
+5. Access the application at http://localhost:8080
+
+## LDAP Configuration
+
+Redstone provides a flexible, configuration-based approach for managing LDAP users, groups, and role mappings:
+
+### Default Configuration
+
+The default LDAP structure is defined in `components/ldap/ldap-defaults.yaml` and includes:
+
+- Service accounts for each component (Redmica, Grafana, Loki, etc.)
+- Common user roles (admin, developer, viewer)
+- Standard groups and permissions
+- Role mappings for service integrations
+
+### Customizing LDAP
+
+To customize LDAP for your organization:
+
+1. **Option 1**: Edit `components/ldap/ldap-defaults.yaml` directly
+2. **Option 2**: Create a custom configuration at `custom/ldap-config.yaml`
+
+### LDAP Authentication
+
+Redstone provides automated LDAP authentication setup for all components:
+
+- **Port**: LDAP uses port 3890 consistently across all services
+- **Automated Configuration**: The deployment process configures LDAP for both Grafana and Redmica
+- **Testing**: Run `task test-ldap` to verify LDAP authentication is working properly
+
+#### Default Test Credentials
+
+- **Username**: developer_user
+- **Password**: devpassword
+- **Groups**: developers, grafana_editors, redmica_users
+
+### Quick Start Deployment
+
+```bash
+# Clone the repository
+git clone https://github.com/zacharyelston/redstone.git
+cd redstone
+
+# Install task (if not already installed)
+brew install go-task/tap/go-task
+
+# Create .env file from example
+cp .env.example .env
+
+# Deploy the full stack
+task deploy
+
+# Access services
+# Redmica: http://localhost:3000 (default admin/admin or LDAP credentials)
+# Grafana: http://localhost:3002 (LDAP credentials)
+# LDAP admin: http://localhost:17170 (admin/admin)
+```
+
+The configuration system will automatically detect and use your custom configuration during setup.
+
+### Configuration Format
+
+```yaml
+# Example structure (see ldap-defaults.yaml for full reference)
+base_config:
+  domain: yourdomain.local
+  base_dn: dc=yourdomain,dc=local
+
+users:
+  - username: example_user
+    display_name: Example User
+    email: user@example.com
+    groups: [developers, project_users]
+
+groups:
+  - name: developers
+    display_name: Developers
+    description: Development team access
+
+role_mappings:
+  redmica:
+    admin: [administrators]
+    developer: [developers]
+```
+
+The LDAP configuration is automatically applied during deployment using the scripts in `components/ldap/` and `scripts/configure-ldap.sh`.
 
 ## Deployment Options
 

@@ -1,0 +1,42 @@
+production:
+  # LDAP authentication configuration for lldap
+  ldap:
+    enabled: true
+    host: ldap
+    port: 3890
+    account: 'uid=admin,ou=people,dc=redstone,dc=local'
+    password: 'adminadmin'
+    base_dn: 'ou=people,dc=redstone,dc=local'
+    attr_login: uid
+    attr_firstname: givenname
+    attr_lastname: sn
+    attr_mail: mail
+    attr_username: cn
+    # Group settings - enables sync from LDAP groups to Redmica groups
+    group_base_dn: 'ou=groups,dc=redstone,dc=local'
+    group_scope: sub
+    group_filter: ''
+    group_attribute: cn
+    member_attribute: member
+    
+    # Group role mappings - map LDAP groups to Redmica roles
+    # These correspond to the role_mappings in ldap-defaults.yaml
+    groups_base_dn: 'cn=groups,dc=redstone,dc=local'
+    
+    # Administrator role mapping
+    admin_group: 'admins'
+    
+    # Developer role mapping
+    developers_group: 'developers'
+    
+    # Regular user role mapping
+    users_group: ['viewers', 'redmica_users']
+    
+    # On-the-fly user creation settings
+    onthefly_register: true
+    # Allow user self-registration via LDAP
+    self_register: true
+    
+    # Only allow LDAP authentication - set to false if you need local admin accounts
+    tls: false
+    timeout: 20

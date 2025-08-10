@@ -1,0 +1,188 @@
+{{- if .Values.logging.fluentBit.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "redstone.fullname" . }}-fluent-bit
+  labels:
+    {{- include "redstone.serviceLabels" (dict "serviceName" "fluent-bit" "context" .) | nindent 4 }}
+    app.kubernetes.io/component: fluent-bit
+spec:
+  selector:
+    matchLabels:
+      {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "fluent-bit" "context" .) | nindent 6 }}
+      app.kubernetes.io/component: fluent-bit
+  template:
+    metadata:
+      labels:
+        {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "fluent-bit" "context" .) | nindent 8 }}
+        app.kubernetes.io/component: fluent-bit
+        service: fluent-bit
+        component: logging
+    spec:
+      serviceAccountName: {{ include "redstone.fullname" . }}-fluent-bit
+      containers:
+        - name: fluent-bit
+          image: "{{ .Values.logging.fluentBit.image.repository }}:{{ .Values.logging.fluentBit.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 2020
+              protocol: TCP
+          {{- if .Values.logging.fluentBit.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.logging.fluentBit.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.logging.fluentBit.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.logging.fluentBit.readinessProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          volumeMounts:
+            - name: config
+              mountPath: /fluent-bit/etc
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: etcmachineid
+              mountPath: /etc/machine-id
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "redstone.fullname" . }}-fluent-bit-config
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: etcmachineid
+          hostPath:
+            path: /etc/machine-id
+            type: File
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - operator: "Exists"
+          effect: "NoExecute"
+        - operator: "Exists"
+          effect: "NoSchedule"
+{{- end }}
+---
+{{- if .Values.logging.fluentBit.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "redstone.fullname" . }}-fluent-bit-config
+  labels:
+    {{- include "redstone.labels" . | nindent 4 }}
+    app.kubernetes.io/component: fluent-bit
+data:
+  fluent-bit.conf: |
+    {{- .Values.logging.fluentBit.config.service | nindent 4 }}
+    
+    {{- .Values.logging.fluentBit.config.inputs | nindent 4 }}
+    
+    {{- .Values.logging.fluentBit.config.filters | nindent 4 }}
+    
+    {{- .Values.logging.fluentBit.config.outputs | nindent 4 }}
+  
+  parsers.conf: |
+    [PARSER]
+        Name   apache
+        Format regex
+        Regex  ^(?<host>[^ ]*) [^ ]* (?<user>[^ ]*) \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^\"]*?)(?: +\S*)?)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)")?$
+        Time_Key time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+
+    [PARSER]
+        Name   apache2
+        Format regex
+        Regex  ^(?<host>[^ ]*) [^ ]* (?<user>[^ ]*) \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^ ]*) +\S*)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)")?$
+        Time_Key time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+
+    [PARSER]
+        Name   nginx
+        Format regex
+        Regex ^(?<remote>[^ ]*) (?<host>[^ ]*) (?<user>[^ ]*) \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^\"]*?)(?: +\S*)?)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)")?$
+        Time_Key time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+
+    [PARSER]
+        Name   json
+        Format json
+        Time_Key time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+
+    [PARSER]
+        Name cri
+        Format regex
+        Regex ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<message>.*)$
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+
+
+{{- end }}
+---
+{{- if .Values.logging.fluentBit.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "redstone.fullname" . }}-fluent-bit
+  labels:
+    {{- include "redstone.labels" . | nindent 4 }}
+    app.kubernetes.io/component: fluent-bit
+{{- end }}
+---
+{{- if .Values.logging.fluentBit.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "redstone.fullname" . }}-fluent-bit
+  labels:
+    {{- include "redstone.labels" . | nindent 4 }}
+    app.kubernetes.io/component: fluent-bit
+rules:
+- apiGroups: [""]
+  resources:
+  - namespaces
+  - pods
+  - nodes
+  verbs: ["get", "list", "watch"]
+{{- end }}
+---
+{{- if .Values.logging.fluentBit.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "redstone.fullname" . }}-fluent-bit
+  labels:
+    {{- include "redstone.labels" . | nindent 4 }}
+    app.kubernetes.io/component: fluent-bit
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "redstone.fullname" . }}-fluent-bit
+subjects:
+- kind: ServiceAccount
+  name: {{ include "redstone.fullname" . }}-fluent-bit
+  namespace: {{ .Release.Namespace }}
+{{- end }}

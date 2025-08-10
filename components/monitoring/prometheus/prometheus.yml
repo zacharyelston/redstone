@@ -2,25 +2,53 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets:
-          # alertmanager:9093
-
-rule_files:
-  # - "alert_rules.yml"
-
 scrape_configs:
+  # Self-monitoring - working
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
-
-  - job_name: 'redmica'
+  
+  # Grafana - working
+  - job_name: 'grafana'
     metrics_path: /metrics
     static_configs:
-      - targets: ['redmica:3000']
-
-  - job_name: 'node-exporter'
+      - targets: ['redstone-grafana-1:3000']
+        labels:
+          service: 'grafana'
+          
+  # Loki - working
+  - job_name: 'loki'
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ['redstone-loki-1:3100']
+        labels:
+          service: 'loki'
+
+  # Comment out targets that don't expose metrics endpoints yet
+  # These would require exporters to be added to the docker-compose.yml
+  
+  # - job_name: 'postgres-exporter'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #       labels:
+  #         service: 'postgres'
+  
+  # - job_name: 'redis-exporter'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'
+          
+  # Docker metrics requires enabling the metrics endpoint in the Docker daemon
+  # - job_name: 'docker'
+  #   static_configs:
+  #     - targets: ['host.docker.internal:9323']
+  #       labels:
+  #         service: 'docker'
+          
+  # Fluent Bit metrics would need to be configured with a metrics endpoint
+  # - job_name: 'fluent-bit'
+  #   static_configs:
+  #     - targets: ['redstone-fluent-bit-1:2020']
+  #       labels:
+  #         service: 'logging'
+

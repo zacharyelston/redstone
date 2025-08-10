@@ -1,0 +1,148 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  PROJECT_NAME: redstone
+  DEFAULT_PROFILE: production
+
+tasks:
+  setup:
+    desc: "Complete environment setup with auto-provisioning"
+    cmds:
+      - cp .env.example .env
+      - ./scripts/generate-secrets.sh
+      - echo "🚀 Starting core services first..."
+      - docker compose --profile core up -d ldap postgres redis
+      - echo "⏳ Waiting for services to initialize..."
+      - sleep 10
+      - ./scripts/configure-ldap.sh
+      - echo "✅ Environment setup complete"
+
+  deploy:
+    desc: "Deploy with profile"
+    cmds:
+      - echo "🚀 Deploying with profile {{.PROFILE | default .DEFAULT_PROFILE}}"
+      - docker compose -f docker-compose.yml -f docker-compose.loki-driver.yml --profile {{.PROFILE | default .DEFAULT_PROFILE}} up -d
+      - ./scripts/initialize-database.sh
+      - ./scripts/bootstrap-ldap-official.sh
+      - ./scripts/configure-redmica.sh
+      - ./scripts/configure-redmica-ldap.sh
+      - echo "✅ Running LDAP authentication test to validate setup..."
+      - task: test-ldap
+
+  deploy-dev:
+    desc: "Deploy development environment"
+    dotenv: ['.env']
+    cmds:
+      - ./scripts/generate-secrets.sh
+      - docker compose -f docker-compose.yml -f docker-compose.loki-driver.yml --profile core --profile development --profile monitoring up -d
+      - ./scripts/initialize-database.sh
+      - ./scripts/bootstrap-ldap-official.sh
+      - ./scripts/configure-redmica.sh
+      - ./scripts/configure-redmica-ldap.sh
+      - echo "✅ Running LDAP authentication test to validate setup..."
+      - task: test-ldap
+
+  deploy-prod:
+    desc: "Deploy production environment"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose.loki-driver.yml --profile production up -d
+      - ./scripts/initialize-database.sh
+      - ./scripts/bootstrap-ldap-official.sh
+      - ./scripts/configure-redmica.sh
+      - ./scripts/configure-redmica-ldap.sh
+      - echo "✅ Running LDAP authentication test to validate setup..."
+      - task: test-ldap
+
+  test-ldap:
+    desc: "Test LDAP authentication for Grafana and Redmica"
+    cmds:
+      - echo "🔍 Testing LDAP authentication setup..."
+      - ./scripts/test-ldap-auth.sh
+
+  teardown:
+    desc: "Standard teardown - preserves images and .env"
+    cmds:
+      - echo "🧹 Stopping all services..."
+      - docker compose down -v
+      - echo "🗑️ Removing project volumes..."
+      - rm -rf ./storage/* || true
+      - echo "✅ Standard teardown finished (images and .env preserved)"
+
+  teardown-full:
+    desc: "Complete teardown including all images and configurations"
+    prompt: "This will destroy ALL data including .env and ALL Docker images. Continue?"
+    cmds:
+      - echo "🧹 Stopping all services..."
+      - docker compose down -v
+      - echo "🗑️ Removing all Docker images, containers, and volumes..."
+      - docker system prune -a --volumes --force
+      - echo "📜 Removing .env file..."
+      - rm -f .env
+      - echo "✅ Complete teardown finished"
+
+  teardown-project:
+    desc: "Project teardown - removes only project images and volumes"
+    cmds:
+      - echo "🧹 Stopping all services..."
+      - docker compose down -v --rmi local
+      - echo "🗑️ Removing project volumes..."
+      - rm -rf ./storage/* || true
+      - echo "✅ Project teardown finished (.env preserved)"
+
+  test-rebuild:
+    desc: "Full teardown and rebuild test"
+    cmds:
+      - echo "🧪 Starting full rebuild test..."
+      - task: teardown-full
+      - task: setup
+      - task: deploy-dev
+      - echo "✅ Rebuild test completed successfully"
+
+  status:
+    desc: "Show status of all services"
+    cmds:
+      - docker compose ps
+      - ./scripts/check-health.sh
+
+  logs:
+    desc: "Show logs for all services"
+    cmds:
+      - docker compose logs -f
+
+  validate-config:
+    desc: "Validate configuration"
+    cmds:
+      - ./scripts/validate-config.sh
+
+  validate-stack:
+    desc: "Validate stack health"
+    cmds:
+      - ./scripts/validate-stack.sh
+
+  init-db:
+    desc: "Initialize database schemas and permissions"
+    cmds:
+      - ./scripts/initialize-database.sh
+
+  configure-redmica:
+    desc: "Configure Redmica with default trackers and enumerations"
+    cmds:
+      - ./scripts/configure-redmica.sh
+
+  help:
+    desc: "Show help"
+    cmds:
+      - echo "🎯 Redstone Environment Management"
+      - echo ""
+      - echo "📋 Common Commands:"
+      - echo "  task setup        # Initial setup"
+      - echo "  task deploy-dev   # Start development"
+      - echo "  task status       # Check status"
+      - echo "  task test-rebuild # Full rebuild test"
+      - echo "  task teardown     # Complete cleanup"
+
+  default:
+    cmds:
+      - task: help
