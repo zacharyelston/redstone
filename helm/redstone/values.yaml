@@ -159,8 +159,6 @@ ldap:
   #   readOnlyRootFilesystem: false
   
   env:
-    - name: LLDAP_HTTP_PORT
-      value: "3890"
     - name: LLDAP_LDAP_PORT
       value: "3890"
     - name: LLDAP_JWT_SECRET

@@ -26,7 +26,10 @@ spec:
           imagePullPolicy: {{ .Values.ldap.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.ldap.service.targetPort }}
+              containerPort: 17170
+              protocol: TCP
+            - name: ldap
+              containerPort: 3890
               protocol: TCP
           env:
             {{- toYaml .Values.ldap.env | nindent 12 }}
@@ -64,13 +67,16 @@ metadata:
 spec:
   type: {{ .Values.ldap.service.type }}
   ports:
-    - port: {{ .Values.ldap.service.port }}
-      targetPort: {{ .Values.ldap.service.targetPort }}
+    - port: 17170
+      targetPort: 17170
       protocol: TCP
       name: http
+    - port: 3890
+      targetPort: 3890
+      protocol: TCP
+      name: ldap
   selector:
-    {{- include "redstone.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: ldap
+    {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "ldap" "context" .) | nindent 4 }}
 {{- end }}
 ---
 {{- if .Values.ldap.enabled }}
