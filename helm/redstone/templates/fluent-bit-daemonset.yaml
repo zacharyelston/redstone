@@ -4,17 +4,17 @@ kind: DaemonSet
 metadata:
   name: {{ include "redstone.fullname" . }}-fluent-bit
   labels:
-    {{- include "redstone.labels" . | nindent 4 }}
+    {{- include "redstone.serviceLabels" (dict "serviceName" "fluent-bit" "context" .) | nindent 4 }}
     app.kubernetes.io/component: fluent-bit
 spec:
   selector:
     matchLabels:
-      {{- include "redstone.selectorLabels" . | nindent 6 }}
+      {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "fluent-bit" "context" .) | nindent 6 }}
       app.kubernetes.io/component: fluent-bit
   template:
     metadata:
       labels:
-        {{- include "redstone.selectorLabels" . | nindent 8 }}
+        {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "fluent-bit" "context" .) | nindent 8 }}
         app.kubernetes.io/component: fluent-bit
         service: fluent-bit
         component: logging
