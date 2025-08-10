@@ -328,7 +328,7 @@ logging:
         [SERVICE]
             Daemon Off
             Flush 1
-            Log_Level info
+            Log_Level debug
             Parsers_File parsers.conf
             HTTP_Server On
             HTTP_Listen 0.0.0.0
