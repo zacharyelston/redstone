@@ -23,7 +23,7 @@ tasks:
     desc: "Deploy with profile"
     cmds:
       - echo "🚀 Deploying with profile {{.PROFILE | default .DEFAULT_PROFILE}}"
-      - docker compose --profile {{.PROFILE | default .DEFAULT_PROFILE}} up -d
+      - docker compose -f docker-compose.yml -f docker-compose.loki-driver.yml --profile {{.PROFILE | default .DEFAULT_PROFILE}} up -d
       - ./scripts/initialize-database.sh
       - ./scripts/bootstrap-ldap-official.sh
       - ./scripts/configure-redmica.sh
@@ -33,8 +33,10 @@ tasks:
 
   deploy-dev:
     desc: "Deploy development environment"
+    dotenv: ['.env']
     cmds:
-      - docker compose --profile development up -d
+      - ./scripts/generate-secrets.sh
+      - docker compose -f docker-compose.yml -f docker-compose.loki-driver.yml --profile core --profile development --profile monitoring up -d
       - ./scripts/initialize-database.sh
       - ./scripts/bootstrap-ldap-official.sh
       - ./scripts/configure-redmica.sh
@@ -45,7 +47,7 @@ tasks:
   deploy-prod:
     desc: "Deploy production environment"
     cmds:
-      - docker compose --profile production up -d
+      - docker compose -f docker-compose.yml -f docker-compose.loki-driver.yml --profile production up -d
       - ./scripts/initialize-database.sh
       - ./scripts/bootstrap-ldap-official.sh
       - ./scripts/configure-redmica.sh
