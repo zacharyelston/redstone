@@ -56,7 +56,7 @@ tasks:
       - echo "📋 Available services:"
       - kubectl get pods -n {{.NAMESPACE}} --no-headers | awk '{print $1}'
       - echo ""
-      - echo "Usage: task logs SERVICE=<pod-name>"
+      - echo "Usage: task --taskfile Taskfile.k8s.yml logs SERVICE=<pod-name>"
       - |
         if [ -n "{{.SERVICE}}" ]; then
           kubectl logs {{.SERVICE}} -n {{.NAMESPACE}} --tail=50 -f
