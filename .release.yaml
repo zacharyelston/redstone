@@ -1,0 +1,176 @@
+# Redstone Release.com Configuration
+# Following the "Built for Clarity" design philosophy
+
+# Define which locations to look for configuration files
+configurationFiles:
+  dockerComposePath: ./docker-compose.yml
+
+# Build configuration
+build:
+  timeout: 1800  # 30 minutes, for larger builds
+
+# Static Environment Configuration with Git Tag-Based Deployments
+environments:
+  # Development - continuous deployment from main branch
+  development:
+    branch: main
+    autoDeployment: true
+    persistence: true  # Static environment - doesn't get destroyed
+    resources:
+      cpu: 1
+      memory: 2Gi
+      replicas: 1
+    services:
+      redmica:
+        resources:
+          cpu: 1
+          memory: 1Gi
+        replicas: 1
+      postgres:
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+        replicas: 1
+      ldap:
+        resources:
+          cpu: 0.2
+          memory: 256Mi
+        replicas: 1
+      prometheus:
+        resources:
+          cpu: 0.3
+          memory: 512Mi
+        replicas: 1
+      grafana:
+        resources:
+          cpu: 0.3
+          memory: 512Mi
+        replicas: 1
+    domains:
+      - dev.redstone.example.com
+      - dev-grafana.redstone.example.com
+
+  # Staging - deploys from release candidate tags (v*-rc.*)
+  staging:
+    tags: "v*-rc.*"  # e.g., v1.2.0-rc.1, v1.2.0-rc.2
+    autoDeployment: false  # Requires manual approval
+    persistence: true  # Static environment - doesn't get destroyed
+    resources:
+      cpu: 1.5
+      memory: 3Gi
+      replicas: 1
+    services:
+      redmica:
+        resources:
+          cpu: 1.5
+          memory: 2Gi
+        replicas: 1
+      postgres:
+        resources:
+          cpu: 0.8
+          memory: 1.5Gi
+        replicas: 1
+      ldap:
+        resources:
+          cpu: 0.3
+          memory: 384Mi
+        replicas: 1
+      prometheus:
+        resources:
+          cpu: 0.5
+          memory: 768Mi
+        replicas: 1
+      grafana:
+        resources:
+          cpu: 0.4
+          memory: 768Mi
+        replicas: 1
+    domains:
+      - staging.redstone.example.com
+      - staging-grafana.redstone.example.com
+
+  # Production - deploys from stable release tags (v* excluding -rc)
+  production:
+    tags: "v*"
+    exclude_tags: "v*-rc.*"  # Exclude release candidates
+    autoDeployment: false  # Always requires manual approval
+    persistence: true  # Static environment - doesn't get destroyed
+    resources:
+      cpu: 2
+      memory: 4Gi
+      replicas: 2
+    services:
+      redmica:
+        resources:
+          cpu: 2
+          memory: 2Gi
+        replicas: 2
+      postgres:
+        resources:
+          cpu: 1
+          memory: 2Gi
+        replicas: 1  # Primary DB - replication handled separately
+      ldap:
+        resources:
+          cpu: 0.5
+          memory: 512Mi
+        replicas: 2
+      prometheus:
+        resources:
+          cpu: 1
+          memory: 1Gi
+        replicas: 1
+      grafana:
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+        replicas: 1
+    domains:
+      - redstone.example.com
+      - grafana.redstone.example.com
+
+# Health check configuration
+healthChecks:
+  redmica:
+    path: /
+    port: 3000
+  postgres:
+    port: 5432
+    tcp: true
+  ldap:
+    port: 389
+    tcp: true
+  prometheus:
+    path: /-/healthy
+    port: 9090
+  grafana:
+    path: /api/health
+    port: 3001
+
+# Data persistence configuration
+persistence:
+  postgres:
+    size: 10Gi
+    storageClass: "standard"
+  redmica:
+    size: 5Gi
+    storageClass: "standard"
+  ldap:
+    size: 1Gi
+    storageClass: "standard"
+  prometheus:
+    size: 5Gi
+    storageClass: "standard"
+  grafana:
+    size: 1Gi
+    storageClass: "standard"
+
+# Custom domain configuration
+domains:
+  production:
+    - domain: redstone.example.com
+      service: redmica
+    - domain: grafana.redstone.example.com
+      service: grafana
+    - domain: prometheus.redstone.example.com
+      service: prometheus
