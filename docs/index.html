@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedStone: Your Life's Operating System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 700;
+            margin-bottom: 2rem;
+            line-height: 1.1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: 300;
+            margin-bottom: 3rem;
+            opacity: 0.95;
+            line-height: 1.4;
+            max-width: 800px;
+        }
+
+        .content {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            opacity: 0.95;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .value-prop {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+            max-width: 1000px;
+        }
+
+        .value-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .value-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .value-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #ffd700;
+        }
+
+        .value-card p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 3rem;
+            max-width: 900px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            color: #ffd700;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            transition: width 0.3s ease;
+            z-index: 1001;
+        }
+
+        .slide-number {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            font-size: 1rem;
+            opacity: 0.7;
+        }
+
+        .logo {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(120deg, #ffd700 0%, #ffed4e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            opacity: 0.9;
+            font-style: italic;
+            margin-bottom: 3rem;
+        }
+
+        .dual-revenue {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 3rem;
+            max-width: 1000px;
+        }
+
+        .revenue-arm {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .revenue-arm h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #ffd700;
+        }
+
+        .revenue-arm ul {
+            list-style: none;
+            text-align: left;
+        }
+
+        .revenue-arm li {
+            margin: 0.8rem 0;
+            font-size: 1.1rem;
+        }
+
+        .revenue-arm li:before {
+            content: "→ ";
+            color: #ffd700;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .value-prop {
+                grid-template-columns: 1fr;
+            }
+            
+            .dual-revenue {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slide-number" id="slideNumber">1 / 15</div>
+    
+    <div class="container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="logo">RedStone</div>
+            <h1>Your Life's Operating System</h1>
+            <p class="subtitle">The infrastructure for Human-AI collaboration that transforms every home into a success engine and every problem solved into income earned.</p>
+            <p class="tagline">"From organizing appliance manuals to democratizing AI training"</p>
+        </div>
+
+        <!-- Slide 2: The Problem -->
+        <div class="slide">
+            <h2>Every Home Has The Same Problem</h2>
+            <div class="content">
+                <p>Scattered documentation. Lost warranties. Forgotten passwords. Maintenance mysteries.</p>
+                <br>
+                <p>Meanwhile, you're solving the same problems millions of others face—with no way to share or monetize your solutions.</p>
+                <br>
+                <p><span class="highlight">Your accumulated wisdom has value. You just can't access it.</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Vision -->
+        <div class="slide">
+            <h2>What If Your Home Had a Memory?</h2>
+            <div class="content">
+                <p>A system that remembers every manual, every fix, every pattern.</p>
+                <br>
+                <p>That learns from your routines and helps you optimize.</p>
+                <br>
+                <p>That turns your solved problems into <span class="highlight">passive income</span>.</p>
+                <br>
+                <p>Welcome to RedStone: Where your daily life becomes your livelihood.</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: The Solution -->
+        <div class="slide">
+            <h2>RedStone: Built on 20 Years of Proven Tech</h2>
+            <div class="value-prop">
+                <div class="value-card">
+                    <h3>🏠 For Your Home</h3>
+                    <p>Manage everything from appliances to warranties. Your digital Swiss Army knife.</p>
+                </div>
+                <div class="value-card">
+                    <h3>💼 For Your Business</h3>
+                    <p>The same system scales from family coordination to enterprise operations.</p>
+                </div>
+                <div class="value-card">
+                    <h3>🤖 For AI Training</h3>
+                    <p>Your knowledge trains next-gen AI while you maintain ownership and earn royalties.</p>
+                </div>
+                <div class="value-card">
+                    <h3>💰 For Your Wallet</h3>
+                    <p>Every problem you've solved helps others—and pays you $500-2,000/month.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Pennies a Day -->
+        <div class="slide">
+            <h2>Just Pennies a Day</h2>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">$0.33</span>
+                    <span class="stat-label">Per Day (Basic)</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$9.99</span>
+                    <span class="stat-label">Per Month</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$1,000+</span>
+                    <span class="stat-label">Monthly Earnings</span>
+                </div>
+            </div>
+            <div class="content" style="margin-top: 3rem;">
+                <p>Less than your morning coffee. More valuable than your retirement fund.</p>
+                <br>
+                <p><span class="highlight">The software organizing your life literally pays for your life.</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Real Success Stories -->
+        <div class="slide">
+            <h2>Real Families. Real Income.</h2>
+            <div class="value-prop">
+                <div class="value-card">
+                    <h3>Sarah's Family</h3>
+                    <p>5 years of allergy-safe meal plans → 200 subscribers → $1,000/month</p>
+                </div>
+                <div class="value-card">
+                    <h3>Marcus's Workshop</h3>
+                    <p>Woodworking techniques documented → "Hardwood Guide" → $800/month</p>
+                </div>
+                <div class="value-card">
+                    <h3>Jennifer's Urban Farm</h3>
+                    <p>Growth patterns tracked → "Yield Optimization" → $1,200/month</p>
+                </div>
+                <div class="value-card">
+                    <h3>David's Tutoring</h3>
+                    <p>Student breakthroughs logged → "Calculus Clarity" → $2,000/month</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: The Tech Stack -->
+        <div class="slide">
+            <h2>Enterprise-Grade, Home-Ready</h2>
+            <div class="content">
+                <p><strong>Redmine:</strong> 20+ years powering millions of projects</p>
+                <br>
+                <p><strong>RAGMine:</strong> Vector database for AI-ready knowledge</p>
+                <br>
+                <p><strong>AEGIS:</strong> Regulatory compliance for healthcare, finance, aviation</p>
+                <br>
+                <p><strong>CTXE Marketplace:</strong> "YouTube for AI" - fair compensation for creators</p>
+                <br>
+                <p class="highlight">The same software running Fortune 500s now runs your home.</p>
+            </div>
+        </div>
+
+        <!-- Slide 8: CTXE Marketplace -->
+        <div class="slide">
+            <h2>CTXE: The Knowledge Marketplace</h2>
+            <div class="content">
+                <p>Every RAGMine server is a merchant. Every context is a product.</p>
+                <br>
+                <p>AI companies need training data. You have life experience.</p>
+                <br>
+                <p><span class="highlight">50/50 revenue split. No upfront costs. Micropayments automated.</span></p>
+                <br>
+                <p>Your morning routine could train the AI that revolutionizes productivity.</p>
+            </div>
+        </div>
+
+        <!-- Slide 9: Dual Revenue Model -->
+        <div class="slide">
+            <h2>Two Revenue Streams, One Ecosystem</h2>
+            <div class="dual-revenue">
+                <div class="revenue-arm">
+                    <h3>B2C: RedStone</h3>
+                    <ul>
+                        <li>$9.99-299/month subscriptions</li>
+                        <li>3M users by Year 5</li>
+                        <li>Digital Swiss Army knife</li>
+                        <li>Standard in every home</li>
+                    </ul>
+                </div>
+                <div class="revenue-arm">
+                    <h3>B2B: CTXE</h3>
+                    <ul>
+                        <li>AI training marketplace</li>
+                        <li>10-15% transaction fees</li>
+                        <li>Enterprise subscriptions</li>
+                        <li>$500M-2B market value</li>
+                    </ul>
+                </div>
+            </div>
+            <p class="content" style="margin-top: 2rem;">
+                <span class="highlight">B2C provides data. B2B provides revenue. Together, unstoppable.</span>
+            </p>
+        </div>
+
+        <!-- Slide 10: Market Opportunity -->
+        <div class="slide">
+            <h2>The Market Is Massive</h2>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">130M</span>
+                    <span class="stat-label">US Households</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$17B</span>
+                    <span class="stat-label">AI Training Market</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">207M</span>
+                    <span class="stat-label">Content Creators</span>
+                </div>
+            </div>
+            <div class="content" style="margin-top: 3rem;">
+                <p>Only 24% of creators successfully monetize.</p>
+                <p><span class="highlight">We give the other 76% a guaranteed income stream.</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 11: 5-Year Projections -->
+        <div class="slide">
+            <h2>Conservative to Transformative</h2>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">$240M</span>
+                    <span class="stat-label">Worst Case ARR</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$720M</span>
+                    <span class="stat-label">Realistic ARR</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$3B</span>
+                    <span class="stat-label">Best Case ARR</span>
+                </div>
+            </div>
+            <div class="content" style="margin-top: 3rem;">
+                <p>Break-even: 24-48 months</p>
+                <p>IPO-ready: Year 4-5</p>
+                <p><span class="highlight">The next essential household utility.</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 12: Why Now -->
+        <div class="slide">
+            <h2>The Perfect Storm</h2>
+            <div class="content">
+                <p>📈 AI training data crisis - demand exceeding supply</p>
+                <br>
+                <p>⚖️ Copyright lawsuits forcing fair compensation</p>
+                <br>
+                <p>🏠 Remote work making home intelligence essential</p>
+                <br>
+                <p>💰 Creator economy proving knowledge has value</p>
+                <br>
+                <p>🔒 Privacy concerns driving self-hosted solutions</p>
+                <br>
+                <p class="highlight">The convergence creates unprecedented opportunity.</p>
+            </div>
+        </div>
+
+        <!-- Slide 13: Competitive Advantage -->
+        <div class="slide">
+            <h2>Why We Win</h2>
+            <div class="value-prop">
+                <div class="value-card">
+                    <h3>🏛️ Proven Foundation</h3>
+                    <p>20+ years of Redmine reliability. Not a startup gamble.</p>
+                </div>
+                <div class="value-card">
+                    <h3>🔐 True Ownership</h3>
+                    <p>You own your data. Big Tech can't compete with that.</p>
+                </div>
+                <div class="value-card">
+                    <h3>💎 Dual Value</h3>
+                    <p>Organize your life AND earn from it. No one else offers both.</p>
+                </div>
+                <div class="value-card">
+                    <h3>🌐 Network Effects</h3>
+                    <p>Every user makes everyone's knowledge more valuable.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Call to Action -->
+        <div class="slide">
+            <h2>Join the Revolution</h2>
+            <div class="content">
+                <p>For families: <span class="highlight">Start earning from your daily life</span></p>
+                <br>
+                <p>For creators: <span class="highlight">Finally get paid when AI trains on your work</span></p>
+                <br>
+                <p>For enterprises: <span class="highlight">Access legally-compliant training data</span></p>
+                <br>
+                <p>For investors: <span class="highlight">Back the platform creating a new asset class</span></p>
+                <br>
+                <p style="font-size: 1.3rem; margin-top: 2rem;">
+                    <strong>Your knowledge is your wealth.<br>
+                    RedStone makes that wealth real.</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 15: Contact -->
+        <div class="slide">
+            <div class="logo">RedStone</div>
+            <h2>The Future of Human-AI Collaboration</h2>
+            <div class="content" style="margin-top: 3rem;">
+                <p><strong>What started as organizing appliance manuals<br>
+                became the foundation for democratizing AI.</strong></p>
+                <br>
+                <p>Every problem you've solved.<br>
+                Every pattern you've learned.<br>
+                Every unique experience you've had.</p>
+                <br>
+                <p class="highlight" style="font-size: 1.5rem;">It all has value. RedStone makes that value real.</p>
+                <br>
+                <br>
+                <p style="opacity: 0.8;">
+                    GitHub: <a href="https://github.com/yourusername/redstone" style="color: #ffd700;">github.com/redstone</a><br>
+                    Email: <a href="mailto:contact@redstone.ai" style="color: #ffd700;">contact@redstone.ai</a><br>
+                    Web: <a href="https://redstone.ai" style="color: #ffd700;">redstone.ai</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">Previous</button>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const progressBar = document.getElementById('progressBar');
+        const slideNumber = document.getElementById('slideNumber');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            
+            if (n >= totalSlides) {
+                currentSlide = totalSlides - 1;
+            } else if (n < 0) {
+                currentSlide = 0;
+            } else {
+                currentSlide = n;
+            }
+            
+            slides[currentSlide].classList.add('active');
+            
+            // Update progress bar
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = progress + '%';
+            
+            // Update slide number
+            slideNumber.textContent = `${currentSlide + 1} / ${totalSlides}`;
+            
+            // Update button states
+            prevBtn.style.opacity = currentSlide === 0 ? '0.5' : '1';
+            nextBtn.style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === ' ') {
+                e.preventDefault();
+                changeSlide(1);
+            }
+        });
+
+        // Touch/swipe support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) changeSlide(1);  // Swipe left
+            if (touchEndX > touchStartX + 50) changeSlide(-1); // Swipe right
+        }
+
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>

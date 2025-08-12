@@ -228,6 +228,12 @@ grafana:
   enabled: true
   adminPassword: "admin123"
   
+  # Fix subpath configuration for Release.com deployment
+  grafana.ini:
+    server:
+      serve_from_sub_path: true
+      root_url: "%(protocol)s://%(domain)s/grafana/"
+    
   service:
     type: ClusterIP
     port: 3000
@@ -251,19 +257,11 @@ grafana:
     enabled: true
     size: 2Gi
   
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: Loki
-          type: loki
-          access: proxy
-          url: http://loki:3100
-          isDefault: true
-        - name: Prometheus
-          type: prometheus
-          access: proxy
-          url: http://redstone-prometheus-server:80
+  datasources: {}
+  
+  # Use ConfigMap-based datasource provisioning instead
+  datasourcesConfigMaps:
+    - redstone-grafana-datasources
   
   dashboardProviders:
     dashboardproviders.yaml:

@@ -1,0 +1,26 @@
+# Redstone Release.com Tools - Python Dependencies
+# Following the "Built for Clarity" design philosophy
+
+# HTTP client for Release.com API
+requests>=2.31.0
+
+# JSON processing and validation
+jsonschema>=4.17.0
+
+# Command line argument parsing
+click>=8.1.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Date/time handling
+python-dateutil>=2.8.0
+
+# YAML processing for configuration
+PyYAML>=6.0
+
+# HTTP status code handling
+httpx>=0.24.0
+
+# Retry logic for API calls
+tenacity>=8.2.0

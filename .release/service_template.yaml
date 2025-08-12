@@ -1,0 +1,72 @@
+# Redstone Service Template for Release.com
+# Following the "Built for Clarity" design philosophy
+
+# This template defines a microservice configuration for Release.com
+service:
+  name: ${SERVICE_NAME}
+  description: ${SERVICE_DESCRIPTION}
+  type: ${SERVICE_TYPE:-ClusterIP}
+  
+  # Container configuration
+  container:
+    image: ${SERVICE_IMAGE}
+    tag: ${SERVICE_TAG:-latest}
+    port: ${SERVICE_PORT:-8080}
+    command: ${SERVICE_COMMAND}
+    args: ${SERVICE_ARGS}
+    
+    # Resource requirements
+    resources:
+      requests:
+        cpu: ${SERVICE_CPU_REQUEST:-100m}
+        memory: ${SERVICE_MEMORY_REQUEST:-128Mi}
+      limits:
+        cpu: ${SERVICE_CPU_LIMIT:-500m}
+        memory: ${SERVICE_MEMORY_LIMIT:-256Mi}
+        
+    # Environment variables
+    env:
+      - name: SERVICE_ENV_VAR1
+        value: ${SERVICE_ENV_VAR1_VALUE}
+      - name: SERVICE_ENV_VAR2
+        valueFrom:
+          secretKeyRef:
+            name: ${SERVICE_NAME}-secrets
+            key: env-var2
+            
+  # Health checks
+  healthCheck:
+    livenessProbe:
+      httpGet:
+        path: ${HEALTH_CHECK_PATH:-/health}
+        port: ${HEALTH_CHECK_PORT:-8080}
+      initialDelaySeconds: ${LIVENESS_INITIAL_DELAY:-30}
+      periodSeconds: ${LIVENESS_PERIOD:-10}
+      
+    readinessProbe:
+      httpGet:
+        path: ${READINESS_CHECK_PATH:-/ready}
+        port: ${READINESS_CHECK_PORT:-8080}
+      initialDelaySeconds: ${READINESS_INITIAL_DELAY:-15}
+      periodSeconds: ${READINESS_PERIOD:-5}
+      
+  # Persistence configuration
+  persistence:
+    enabled: ${PERSISTENCE_ENABLED:-false}
+    storageClass: ${STORAGE_CLASS:-standard}
+    size: ${STORAGE_SIZE:-1Gi}
+    mountPath: ${MOUNT_PATH:-/data}
+    
+  # Ingress configuration
+  ingress:
+    enabled: ${INGRESS_ENABLED:-false}
+    host: ${INGRESS_HOST}
+    path: ${INGRESS_PATH:-/}
+    tls: ${INGRESS_TLS:-true}
+    
+  # Scaling configuration
+  autoscaling:
+    enabled: ${AUTOSCALING_ENABLED:-false}
+    minReplicas: ${MIN_REPLICAS:-1}
+    maxReplicas: ${MAX_REPLICAS:-10}
+    targetCPUUtilizationPercentage: ${TARGET_CPU_UTILIZATION:-80}
