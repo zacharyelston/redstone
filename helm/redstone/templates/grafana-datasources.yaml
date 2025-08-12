@@ -1,0 +1,32 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redstone-grafana-datasources
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "redstone.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+    grafana_datasource: "1"
+data:
+  datasources.yaml: |-
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://{{ include "redstone.fullname" . }}-loki:3100
+        isDefault: true
+        version: 1
+        editable: false
+        jsonData:
+          maxLines: 1000
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://{{ include "redstone.fullname" . }}-prometheus-server:80
+        version: 1
+        editable: false
+        jsonData:
+          timeInterval: "30s"
+{{- end }}
