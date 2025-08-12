@@ -240,8 +240,18 @@ grafana:
     namespaced: true
     useExistingRole: ""
   
-  # Disable Grafana Agent Operator to avoid ClusterRole conflicts
-  grafana-agent:
+  # Disable all optional components that might create ClusterRoles
+  sidecar:
+    dashboards:
+      enabled: false
+    datasources:
+      enabled: false
+  
+  # Disable agent operator and other optional components
+  agent:
+    enabled: false
+  
+  grafanaOperator:
     enabled: false
     
   service:
