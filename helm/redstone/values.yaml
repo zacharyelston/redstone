@@ -263,11 +263,28 @@ grafana:
     enabled: true
     size: 2Gi
   
-  datasources: {}
-  
-  # Use ConfigMap-based datasource provisioning instead
-  datasourcesConfigMaps:
-    - redstone-grafana-datasources
+  # Mount ConfigMaps for provisioning
+  extraConfigmapMounts:
+    - name: datasources-configmap
+      mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+      configMap: redstone-grafana-datasources
+      subPath: datasources.yaml
+      readOnly: true
+    - name: dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-dashboards
+      configMap: redstone-grafana-dashboards
+      subPath: ""
+      readOnly: true
+    - name: metrics-dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-metrics
+      configMap: redstone-grafana-dashboard-metrics
+      subPath: ""
+      readOnly: true
+    - name: working-dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-working
+      configMap: redstone-grafana-dashboard-working
+      subPath: ""
+      readOnly: true
   
   dashboardProviders:
     dashboardproviders.yaml:
@@ -297,11 +314,6 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/redstone-working
-  
-  dashboardsConfigMaps:
-    redstone-dashboards: "redstone-grafana-dashboards"
-    redstone-metrics: "redstone-grafana-dashboard-metrics"
-    redstone-working: "redstone-grafana-dashboard-working"
 
 # Prometheus Configuration (using Prometheus chart)
 prometheus:
