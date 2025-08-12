@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedStone - Quick Pitch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(120deg, #ffd700 0%, #ffed4e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin: 2rem 0 1rem;
+            color: #ffd700;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        .pitch-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .highlight {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #ffd700;
+        }
+
+        .cta {
+            background: linear-gradient(120deg, #ffd700 0%, #ffed4e 100%);
+            color: #333;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 1rem 0;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+
+        .cta:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 3rem; }
+            h2 { font-size: 1.5rem; }
+            .tagline { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RedStone</h1>
+        <p class="tagline">Your Life's Operating System</p>
+
+        <div class="pitch-section">
+            <h2>🎯 The Pitch</h2>
+            <p>
+                <strong>RedStone gives AI a persistent memory that's personal to you</strong> - whether for your home, car, or company - ensuring every interaction builds on what came before. Built on Redmine's proven infrastructure plus RAGMine vector databases, it creates a front door to the CTXE marketplace where domain experts monetize their expertise by supplying legitimate, licensed AI training data.
+            </p>
+            <br>
+            <p>
+                The same software managing your family's daily life while earning <span class="highlight">$1,000+/month</span> from accumulated knowledge scales to enterprise AI operations with regulatory compliance. You're still the resource being exploited by AI, but now you have protection in numbers, ownership of your data, and <span class="highlight">fair compensation when AI systems train on your unique context</span>.
+            </p>
+        </div>
+
+        <div class="pitch-section">
+            <h2>💰 Dual Revenue Model</h2>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">$0.33</span>
+                    <span class="stat-label">Per Day (B2C)</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$1,000+</span>
+                    <span class="stat-label">Monthly Earnings</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$720M</span>
+                    <span class="stat-label">Year 5 ARR (Realistic)</span>
+                </div>
+            </div>
+            <ul>
+                <li><strong>B2C Arm:</strong> RedStone subscriptions ($9.99-299/month) - "Digital Swiss Army Knife"</li>
+                <li><strong>B2B Arm:</strong> CTXE marketplace (10-15% transaction fees) - "YouTube for AI Training"</li>
+                <li><strong>Synergy:</strong> B2C generates data, B2B generates revenue, both support each other</li>
+            </ul>
+        </div>
+
+        <div class="pitch-section">
+            <h2>🚀 Why Now?</h2>
+            <ul>
+                <li>AI training data crisis - demand exceeding supply by 10x</li>
+                <li>Copyright lawsuits forcing fair compensation models</li>
+                <li>207M creators globally, only 24% successfully monetizing</li>
+                <li>Remote work making home intelligence essential</li>
+                <li>Privacy concerns driving self-hosted solutions</li>
+            </ul>
+        </div>
+
+        <div class="pitch-section">
+            <h2>🏆 Competitive Advantages</h2>
+            <ul>
+                <li><strong>Proven Foundation:</strong> 20+ years of Redmine reliability, not a startup gamble</li>
+                <li><strong>True Ownership:</strong> Users own their data, Big Tech can't compete</li>
+                <li><strong>Dual Value:</strong> Organize your life AND earn from it</li>
+                <li><strong>Network Effects:</strong> Every user makes everyone's knowledge more valuable</li>
+                <li><strong>Conservative Tech:</strong> Boring infrastructure = regulatory approval</li>
+            </ul>
+        </div>
+
+        <div class="pitch-section">
+            <h2>📊 The Numbers</h2>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">130M</span>
+                    <span class="stat-label">US Households (TAM)</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">$17B</span>
+                    <span class="stat-label">AI Training Market 2030</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">3M</span>
+                    <span class="stat-label">Users by Year 5</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">20:1</span>
+                    <span class="stat-label">LTV/CAC Ratio</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pitch-section">
+            <h2>✨ The Vision</h2>
+            <p>
+                By Year 5, RedStone becomes the third essential digital service:
+            </p>
+            <ul>
+                <li><strong>Internet</strong> provides connectivity</li>
+                <li><strong>Cloud Storage</strong> provides data backup</li>
+                <li><strong>RedStone</strong> provides intelligence</li>
+            </ul>
+            <br>
+            <p>
+                <span class="highlight">"What started as organizing appliance manuals became the foundation for democratizing AI."</span>
+            </p>
+        </div>
+
+        <div style="text-align: center; margin: 3rem 0;">
+            <a href="index.html" class="cta">View Full Presentation</a>
+            <br><br>
+            <p style="opacity: 0.8;">
+                Your knowledge is your wealth.<br>
+                RedStone makes that wealth real.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
