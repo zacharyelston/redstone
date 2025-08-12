@@ -24,7 +24,7 @@ data:
       - name: Prometheus
         type: prometheus
         access: proxy
-        url: http://{{ include "redstone.fullname" . }}-prometheus-server:80
+        url: http://{{ include "redstone.fullname" . }}-prometheus-server:9090
         version: 1
         editable: false
         jsonData:
