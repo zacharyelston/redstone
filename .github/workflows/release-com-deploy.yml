@@ -130,14 +130,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       
-      - name: Install Release.com CLI dependencies
+      - name: Build Release.com tools container
         run: |
-          pip install requests
+          echo "Building containerized Release.com tools..."
+          ./scripts/release-tools-container.sh build
       
       - name: Load environment configuration
         run: |
@@ -153,28 +152,16 @@ jobs:
           echo "Deploying to Release.com $ENV environment..."
           echo "Deploy reason: ${{ needs.determine-environment.outputs.deploy_reason }}"
           
-          # Set environment-specific app and env IDs
-          case $ENV in
-            development)
-              APP_ID="${{ secrets.RELEASE_DEV_APP_ID }}"
-              ENV_ID="${{ secrets.RELEASE_DEV_ENV_ID }}"
-              ;;
-            staging)
-              APP_ID="${{ secrets.RELEASE_STAGING_APP_ID }}"
-              ENV_ID="${{ secrets.RELEASE_STAGING_ENV_ID }}"
-              ;;
-            production)
-              APP_ID="${{ secrets.RELEASE_PROD_APP_ID }}"
-              ENV_ID="${{ secrets.RELEASE_PROD_ENV_ID }}"
-              ;;
-          esac
-          
-          python deploy/release/api/client.py deploy \
-            --app-id $APP_ID \
-            --env-id $ENV_ID \
-            --environment $ENV
+          # Use containerized Release.com tools for deployment
+          ./scripts/release-tools-container.sh deploy $ENV
         env:
           RELEASE_API_TOKEN: ${{ secrets.RELEASE_API_TOKEN }}
+          RELEASE_DEV_APP_ID: ${{ secrets.RELEASE_DEV_APP_ID }}
+          RELEASE_DEV_ENV_ID: ${{ secrets.RELEASE_DEV_ENV_ID }}
+          RELEASE_STAGING_APP_ID: ${{ secrets.RELEASE_STAGING_APP_ID }}
+          RELEASE_STAGING_ENV_ID: ${{ secrets.RELEASE_STAGING_ENV_ID }}
+          RELEASE_PROD_APP_ID: ${{ secrets.RELEASE_PROD_APP_ID }}
+          RELEASE_PROD_ENV_ID: ${{ secrets.RELEASE_PROD_ENV_ID }}
 
   # Post-deployment testing
   test-deployment:
@@ -192,12 +179,13 @@ jobs:
           echo "Waiting for deployment to be ready..."
           sleep 60  # Give deployment time to start
       
-      - name: Run post-deployment tests
+      - name: Test deployment
         run: |
           ENV="${{ needs.determine-environment.outputs.environment }}"
-          echo "Running post-deployment tests for $ENV environment..."
+          echo "Testing $ENV environment deployment..."
           
-          # Set environment-specific URLs for testing
+          # Use containerized Release.com tools for testing
+          ./scripts/release-tools-container.sh test-deployment $ENV
           case $ENV in
             development)
               BASE_URL="https://dev.redstone.example.com"

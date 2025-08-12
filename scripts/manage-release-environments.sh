@@ -70,20 +70,58 @@ check_prerequisites() {
         exit 1
     fi
     
-    if [[ ! -f "$PROJECT_ROOT/deploy/release/api/client.py" ]]; then
-        print_error "Release.com API client not found at deploy/release/api/client.py"
+    # Check for API client in both host and container paths
+    if [[ -f "$PROJECT_ROOT/deploy/release/api/client.py" ]]; then
+        API_CLIENT_PATH="$PROJECT_ROOT/deploy/release/api/client.py"
+    elif [[ -f "/workspace/deploy/release/api/client.py" ]]; then
+        API_CLIENT_PATH="/workspace/deploy/release/api/client.py"
+    elif [[ -f "/app/api/client.py" ]]; then
+        API_CLIENT_PATH="/app/api/client.py"
+    else
+        print_error "Release.com API client not found. Checked paths:"
+        print_error "  - $PROJECT_ROOT/deploy/release/api/client.py"
+        print_error "  - /workspace/deploy/release/api/client.py"
+        print_error "  - /app/api/client.py"
         exit 1
     fi
 }
 
 # Function to get environment status
 get_environment_status() {
-    local env=$1
+    local env="$1"
+    
     print_status "Checking status of $env environment..."
     
-    # Use Release.com API client to get status
-    python3 "$PROJECT_ROOT/deploy/release/api/client.py" status \
-        --environment "$env" || echo "Status check failed"
+    # Get environment-specific app and env IDs
+    local app_id=""
+    local env_id=""
+    
+    case $env in
+        development)
+            app_id="$RELEASE_DEV_APP_ID"
+            env_id="$RELEASE_DEV_ENV_ID"
+            ;;
+        staging)
+            app_id="$RELEASE_STAGING_APP_ID"
+            env_id="$RELEASE_STAGING_ENV_ID"
+            ;;
+        production)
+            app_id="$RELEASE_PROD_APP_ID"
+            env_id="$RELEASE_PROD_ENV_ID"
+            ;;
+        *)
+            print_error "Unknown environment: $env"
+            return 1
+            ;;
+    esac
+    
+    if [[ -z "$app_id" || -z "$env_id" ]]; then
+        print_warning "Missing app/env IDs for $env environment. Set RELEASE_${env^^}_APP_ID and RELEASE_${env^^}_ENV_ID environment variables."
+        return 1
+    fi
+    
+    # Use Release.com API client to get environments list
+    python3 "$API_CLIENT_PATH" envs --app-id "$app_id" || echo "Status check failed"
 }
 
 # Function to deploy to environment
@@ -101,7 +139,7 @@ deploy_environment() {
     fi
     
     # Deploy using Release.com API client
-    python3 "$PROJECT_ROOT/deploy/release/api/client.py" deploy \
+    python3 "$API_CLIENT_PATH" deploy \
         --environment "$env" \
         --version "$version"
     
@@ -216,7 +254,7 @@ show_logs() {
     
     print_status "Fetching deployment logs for $env environment..."
     
-    python3 "$PROJECT_ROOT/deploy/release/api/client.py" logs \
+    python3 "$API_CLIENT_PATH" logs \
         --environment "$env" \
         --lines 50
 }
