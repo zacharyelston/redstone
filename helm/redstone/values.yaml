@@ -233,6 +233,12 @@ grafana:
     server:
       serve_from_sub_path: true
       root_url: "%(protocol)s://%(domain)s/grafana/"
+  
+  # Fix ClusterRole naming conflicts between environments
+  rbac:
+    create: true
+    namespaced: true
+    useExistingRole: ""
     
   service:
     type: ClusterIP
