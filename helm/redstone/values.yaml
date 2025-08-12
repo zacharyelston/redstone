@@ -239,6 +239,10 @@ grafana:
     create: true
     namespaced: true
     useExistingRole: ""
+  
+  # Disable Grafana Agent Operator to avoid ClusterRole conflicts
+  grafana-agent:
+    enabled: false
     
   service:
     type: ClusterIP
