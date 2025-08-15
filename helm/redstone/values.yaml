@@ -192,9 +192,9 @@ ldap:
           name: redstone-secrets
           key: ldap-admin-password
 
-# Loki Configuration (using Grafana chart)
+# Loki Configuration (using Grafana chart) - DISABLED to avoid grafana-agent-operator ClusterRole conflicts
 loki:
-  enabled: true
+  enabled: false
   loki:
     auth_enabled: false
     commonConfig:
@@ -236,9 +236,8 @@ grafana:
   
   # Fix ClusterRole naming conflicts between environments
   rbac:
-    create: true
+    create: false
     namespaced: true
-    useExistingRole: ""
   
   # Disable all optional components that might create ClusterRoles
   sidecar:
@@ -247,8 +246,12 @@ grafana:
     datasources:
       enabled: false
   
-  # Disable agent operator and other optional components
+  # Disable agent operator and other optional components that create ClusterRoles
   agent:
+    enabled: false
+  
+  # Explicitly disable grafana-agent-operator
+  grafana-agent-operator:
     enabled: false
   
   grafanaOperator:

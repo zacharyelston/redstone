@@ -6,130 +6,196 @@ environment:
   type: ${ENVIRONMENT_TYPE}
   description: ${ENVIRONMENT_DESCRIPTION}
 
-# Service configuration
+# Environment variable mappings from Release.com
+mapping:
+  COMMIT_HASH: RELEASE_COMMIT_SHA
+  CLUSTER_REGION: RELEASE_CLUSTER_REGION
+  NAMESPACE: RELEASE_NAMESPACE
+
+# Default environment variables for all services
+defaults:
+  - key: RAILS_ENV
+    value: production
+  - key: REDMINE_DB_HOSTNAME
+    value: redstone-postgresql
+  - key: REDMINE_DB_DATABASE
+    value: ${REDMINE_DB_DATABASE}
+  - key: LDAP_HOST
+    value: redstone-lldap
+  - key: LDAP_PORT
+    value: "3890"
+
+# Service-specific environment variables
 services:
   redmica:
-    replicas: ${REDMICA_REPLICAS:-1}
-    image: redmine:5.0.5
-    env:
-      - name: REDMINE_DB_POSTGRES
-        value: postgres
-      - name: REDMINE_DB_DATABASE
-        value: ${REDMINE_DB_DATABASE:-redmica}
-      - name: REDMINE_DB_USERNAME
-        value: ${REDMINE_DB_USERNAME:-postgres}
-      - name: REDMINE_DB_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: postgres-credentials
-            key: password
-      - name: REDMINE_SECRET_KEY_BASE
-        valueFrom:
-          secretKeyRef:
-            name: redmica-secrets
-            key: secret-key-base
-    ingress:
-      enabled: true
-      host: ${REDMICA_HOST}
-      tls: true
+    - key: REDMINE_DB_USERNAME
+      value: ${REDMINE_DB_USERNAME}
+    - key: REDMINE_DB_PASSWORD
+      secret: true
+    - key: REDMINE_SECRET_KEY_BASE
+      secret: true
+    - key: REDMINE_LDAP_HOST
+      value: redstone-lldap
+    - key: REDMINE_LDAP_PORT
+      value: "3890"
       
   postgres:
-    replicas: 1
-    image: postgres:15
-    env:
-      - name: POSTGRES_USER
-        value: ${POSTGRES_USER:-postgres}
-      - name: POSTGRES_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: postgres-credentials
-            key: password
-      - name: POSTGRES_DB
-        value: ${POSTGRES_DB:-redmica}
-    persistence:
-      enabled: true
-      storageClass: ${STORAGE_CLASS:-standard}
-      size: ${POSTGRES_STORAGE_SIZE:-10Gi}
+    - key: POSTGRES_DB
+      value: ${REDMINE_DB_DATABASE}
+    - key: POSTGRES_USER
+      value: ${REDMINE_DB_USERNAME}
+    - key: POSTGRES_PASSWORD
+      secret: true
       
   ldap:
-    replicas: 1
-    image: osixia/openldap:1.5.0
-    env:
-      - name: LDAP_DOMAIN
-        value: ${LDAP_DOMAIN:-redstone.local}
-      - name: LDAP_ORGANISATION
-        value: ${LDAP_ORGANISATION:-Redstone Project}
-      - name: LDAP_ADMIN_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: ldap-credentials
-            key: admin-password
-      - name: LDAP_CONFIG_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: ldap-credentials
-            key: config-password
-      - name: LDAP_TLS
-        value: "false"
-    persistence:
-      enabled: true
-      storageClass: ${STORAGE_CLASS:-standard}
-      size: ${LDAP_STORAGE_SIZE:-1Gi}
+    - key: LLDAP_JWT_SECRET
+      secret: true
+    - key: LLDAP_LDAP_USER_PASS
+      secret: true
+    - key: LLDAP_LDAP_BASE_DN
+      value: "dc=redstone,dc=local"
       
   grafana:
-    replicas: 1
-    image: grafana/grafana:latest
-    env:
-      - name: GF_SECURITY_ADMIN_USER
-        value: ${GF_ADMIN_USER:-admin}
-      - name: GF_SECURITY_ADMIN_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: grafana-credentials
-            key: admin-password
-      - name: GF_USERS_ALLOW_SIGN_UP
-        value: "false"
-      - name: GF_INSTALL_PLUGINS
-        value: "grafana-piechart-panel"
-    ingress:
-      enabled: true
-      host: ${GRAFANA_HOST}
-      path: /grafana
-      tls: true
-    persistence:
-      enabled: true
-      storageClass: ${STORAGE_CLASS:-standard}
-      size: ${GRAFANA_STORAGE_SIZE:-1Gi}
-      
-  prometheus:
-    replicas: 1
-    image: prom/prometheus:latest
-    ingress:
-      enabled: true
-      host: ${PROMETHEUS_HOST}
-      path: /prometheus
-      tls: true
-    persistence:
-      enabled: true
-      storageClass: ${STORAGE_CLASS:-standard}
-      size: ${PROMETHEUS_STORAGE_SIZE:-5Gi}
+    - key: GF_SECURITY_ADMIN_USER
+      value: ${GF_ADMIN_USER}
+    - key: GF_SECURITY_ADMIN_PASSWORD
+      secret: true
 
-# Secret configurations
+# Helm values configuration
+helm:
+  values:
+    # Global configuration
+    global:
+      domain: ${DOMAIN}
+    
+    redmica:
+      replicaCount: ${REDMICA_REPLICAS:-1}
+      image:
+        repository: redmica/redmica
+        tag: "3.1.0"
+        pullPolicy: IfNotPresent
+      # Environment variables will be injected by Release.com
+      # based on the services configuration above
+    
+    postgresqlCustom:
+      enabled: true
+      auth:
+        postgresPassword: ${POSTGRES_PASSWORD:-redstone123}
+        username: ${REDMINE_DB_USERNAME:-redmica}
+        password: ${POSTGRES_PASSWORD:-redmica123}
+        database: ${REDMINE_DB_DATABASE:-redmica}
+      primary:
+        persistence:
+          enabled: true
+          size: ${POSTGRES_STORAGE_SIZE:-8Gi}
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+    
+    ldap:
+      enabled: true
+      image:
+        repository: lldap/lldap
+        tag: "latest"
+        pullPolicy: IfNotPresent
+      replicaCount: 1
+      service:
+        type: ClusterIP
+        port: 3890
+        targetPort: 3890
+      env:
+        - name: LLDAP_LDAP_PORT
+          value: "3890"
+        - name: LLDAP_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: redstone-secrets
+              key: ldap-jwt-secret
+        - name: LLDAP_LDAP_USER_PASS
+          valueFrom:
+            secretKeyRef:
+              name: redstone-secrets
+              key: ldap-admin-password
+      resources:
+        limits:
+          cpu: 200m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+    
+    grafana:
+      enabled: true
+      adminPassword: ${GF_ADMIN_PASSWORD:-admin123}
+      service:
+        type: ClusterIP
+        port: 3000
+      ingress:
+        enabled: true
+        ingressClassName: nginx
+        hosts:
+          - ${GRAFANA_HOST:-grafana.local}
+        path: /
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+      persistence:
+        enabled: true
+        size: ${GRAFANA_STORAGE_SIZE:-2Gi}
+    
+    prometheus:
+      enabled: true
+      server:
+        persistentVolume:
+          enabled: true
+          size: ${PROMETHEUS_STORAGE_SIZE:-8Gi}
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+      alertmanager:
+        enabled: false
+      pushgateway:
+        enabled: false
+      nodeExporter:
+        enabled: true
+    
+    loki:
+      enabled: true
+      singleBinary:
+        replicas: 1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        persistence:
+          enabled: true
+          size: 10Gi
+    
+    logging:
+      fluentBit:
+        enabled: true
+
+# Secret configurations for Helm deployment
 secrets:
-  postgres-credentials:
-    - name: password
-      value: ${POSTGRES_PASSWORD}
-      
-  redmica-secrets:
+  redstone-secrets:
     - name: secret-key-base
       value: ${REDMINE_SECRET_KEY_BASE}
-      
-  ldap-credentials:
-    - name: admin-password
+    - name: ldap-jwt-secret
+      value: ${LDAP_JWT_SECRET}
+    - name: ldap-admin-password
       value: ${LDAP_ADMIN_PASSWORD}
-    - name: config-password
-      value: ${LDAP_CONFIG_PASSWORD}
-      
-  grafana-credentials:
-    - name: admin-password
-      value: ${GF_ADMIN_PASSWORD}
