@@ -236,9 +236,8 @@ grafana:
   
   # Fix ClusterRole naming conflicts between environments
   rbac:
-    create: true
+    create: false
     namespaced: true
-    useExistingRole: ""
   
   # Disable all optional components that might create ClusterRoles
   sidecar:
