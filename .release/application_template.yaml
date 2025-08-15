@@ -1,90 +1,42 @@
-app: redstone
-repo_name: redstone
+---
+execution_type: server
+context: release-customer-us-west-2
+domain: rls.sh
+repo_name: zacharyelston/redstone
 tracking_branch: main
-auto_deploy: true
 
-# Helm-based deployment workflow
-workflows:
-  - name: deploy
-    type: helm
-    chart: "./helm/redstone"
-    values_files:
-      - "./helm/redstone/values.yaml"
-    dependency_update: true
-
-# Default resource allocations
-resources:
-  cpu: "1000m"
-  memory: "2Gi"
-  storage: "10Gi"
-  replicas: 1
-
-# Environment template reference
 environment_templates:
   - name: production
-    template: "./environment_template.yaml"
-  - name: staging  
-    template: "./environment_template.yaml"
+  - name: staging
 
-# Service definitions for Helm deployment
-services:
-  - name: redmica
-    port: 3000
-    health_check:
-      path: "/"
-      port: 3000
-      initial_delay_seconds: 60
-      period_seconds: 20
-      
-  - name: postgres
-    port: 5432
-    health_check:
-      path: "/health"
-      port: 5432
-      initial_delay_seconds: 30
-      period_seconds: 10
-      
-  - name: ldap
-    port: 3890
-    health_check:
-      path: "/health"
-      port: 3890
-      initial_delay_seconds: 30
-      period_seconds: 10
-      
-  - name: grafana
-    port: 3000
-    health_check:
-      path: "/api/health"
-      port: 3000
-      initial_delay_seconds: 30
-      period_seconds: 10
+resources:
+  cpu:
+    requests: 500m
+    limits: 1000m
+  memory:
+    requests: 512Mi
+    limits: 2Gi
+  replicas: 1
 
-# Hostnames for external access
-hostnames:
-  - hostname: "${REDMICA_HOST}"
-    service_port: redmica:3000
-  - hostname: "grafana.${DOMAIN}"
-    service_port: grafana:3000
+charts:
+  - directory: helm/redstone
+    name: redstone
+    values: values.yaml
 
-# Shared volumes for persistent storage
-shared_volumes:
-  - name: postgres-data
-    size: "10Gi"
-    mount_path: "/var/lib/postgresql/data"
-    
-  - name: redmica-files
-    size: "5Gi" 
-    mount_path: "/redmica/files"
-    
-  - name: ldap-data
-    size: "1Gi"
-    mount_path: "/var/lib/ldap"
-    
-  - name: prometheus-data
-    size: "5Gi"
-    mount_path: "/prometheus"
-    
-  - name: grafana-data
-    size: "1Gi"
-    mount_path: "/var/lib/grafana"
+workflows:
+  - name: setup
+    parallelize:
+      - step: charts
+        tasks:
+          - charts.redstone
+  - name: patch
+    parallelize:
+      - step: charts
+        tasks:
+          - charts.redstone
+  - name: teardown
+    parallelize:
+      - step: remove-environment
+        tasks:
+          - release.remove_environment
+

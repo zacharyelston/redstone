@@ -6,33 +6,76 @@ environment:
   type: ${ENVIRONMENT_TYPE}
   description: ${ENVIRONMENT_DESCRIPTION}
 
+# Environment variable mappings from Release.com
+mapping:
+  COMMIT_HASH: RELEASE_COMMIT_SHA
+  CLUSTER_REGION: RELEASE_CLUSTER_REGION
+  NAMESPACE: RELEASE_NAMESPACE
+
+# Default environment variables for all services
+defaults:
+  - key: RAILS_ENV
+    value: production
+  - key: REDMINE_DB_HOSTNAME
+    value: redstone-postgresql
+  - key: REDMINE_DB_DATABASE
+    value: ${REDMINE_DB_DATABASE}
+  - key: LDAP_HOST
+    value: redstone-lldap
+  - key: LDAP_PORT
+    value: "3890"
+
+# Service-specific environment variables
+services:
+  redmica:
+    - key: REDMINE_DB_USERNAME
+      value: ${REDMINE_DB_USERNAME}
+    - key: REDMINE_DB_PASSWORD
+      secret: true
+    - key: REDMINE_SECRET_KEY_BASE
+      secret: true
+    - key: REDMINE_LDAP_HOST
+      value: redstone-lldap
+    - key: REDMINE_LDAP_PORT
+      value: "3890"
+      
+  postgres:
+    - key: POSTGRES_DB
+      value: ${REDMINE_DB_DATABASE}
+    - key: POSTGRES_USER
+      value: ${REDMINE_DB_USERNAME}
+    - key: POSTGRES_PASSWORD
+      secret: true
+      
+  ldap:
+    - key: LLDAP_JWT_SECRET
+      secret: true
+    - key: LLDAP_LDAP_USER_PASS
+      secret: true
+    - key: LLDAP_LDAP_BASE_DN
+      value: "dc=redstone,dc=local"
+      
+  grafana:
+    - key: GF_SECURITY_ADMIN_USER
+      value: ${GF_ADMIN_USER}
+    - key: GF_SECURITY_ADMIN_PASSWORD
+      secret: true
+
 # Helm values configuration
 helm:
   values:
+    # Global configuration
+    global:
+      domain: ${DOMAIN}
+    
     redmica:
       replicaCount: ${REDMICA_REPLICAS:-1}
       image:
         repository: redmica/redmica
         tag: "3.1.0"
         pullPolicy: IfNotPresent
-      env:
-        - name: RAILS_ENV
-          value: "production"
-        - name: REDMINE_DB_ADAPTER
-          value: "postgresql"
-        - name: REDMINE_DB_HOST
-          value: "redstone-postgresql-custom"
-        - name: REDMINE_DB_DATABASE
-          value: ${REDMINE_DB_DATABASE:-redmica}
-        - name: REDMINE_DB_USERNAME
-          value: ${REDMINE_DB_USERNAME:-redmica}
-        - name: REDMINE_DB_PASSWORD
-          value: ${POSTGRES_PASSWORD:-redmica123}
-        - name: SECRET_KEY_BASE
-          valueFrom:
-            secretKeyRef:
-              name: redstone-secrets
-              key: secret-key-base
+      # Environment variables will be injected by Release.com
+      # based on the services configuration above
     
     postgresqlCustom:
       enabled: true
