@@ -1,86 +1,90 @@
-# Redstone Release.com Application Template
-# Following the "Built for Clarity" design philosophy
+app: redstone
+repo_name: redstone
+tracking_branch: main
+auto_deploy: true
 
-# Release.com application configuration template
-application:
-  name: redstone
-  description: A modular, cloud-native Redmica deployment with monitoring and LDAP authentication
+# Helm-based deployment workflow
+workflows:
+  - name: deploy
+    type: helm
+    chart: "./helm/redstone"
+    values_files:
+      - "./helm/redstone/values.yaml"
+    dependency_update: true
 
-# Reference to the Helm chart configuration
-helm:
-  chart: ./helm/redstone
-  valuesFiles:
-    - ./helm/redstone/values.yaml
-  dependencyUpdate: true
-
-# Resource limits for services
+# Default resource allocations
 resources:
-  redmica:
-    cpu: 1000m
-    memory: 1Gi
-    
-  postgres:
-    cpu: 500m
-    memory: 1Gi
-    
-  ldap:
-    cpu: 200m
-    memory: 256Mi
-    
-  grafana:
-    cpu: 300m
-    memory: 512Mi
-    
-  prometheus:
-    cpu: 300m
-    memory: 512Mi
-    
-# Data persistence configuration
-persistence:
-  postgres:
-    size: 10Gi
-    
-  redmica:
-    size: 5Gi
-    
-  ldap:
-    size: 1Gi
-    
-  prometheus:
-    size: 5Gi
-    
-  grafana:
-    size: 1Gi
-    
-# Health checks for each service
-healthChecks:
-  redmica:
-    path: /
+  cpu: "1000m"
+  memory: "2Gi"
+  storage: "10Gi"
+  replicas: 1
+
+# Environment template reference
+environment_templates:
+  - name: production
+    template: "./environment_template.yaml"
+  - name: staging  
+    template: "./environment_template.yaml"
+
+# Service definitions for Helm deployment
+services:
+  - name: redmica
     port: 3000
-    initialDelaySeconds: 60
-    periodSeconds: 20
-    
-  postgres:
+    health_check:
+      path: "/"
+      port: 3000
+      initial_delay_seconds: 60
+      period_seconds: 20
+      
+  - name: postgres
     port: 5432
-    protocol: tcp
-    periodSeconds: 15
-    
-  ldap:
+    health_check:
+      path: "/health"
+      port: 5432
+      initial_delay_seconds: 30
+      period_seconds: 10
+      
+  - name: ldap
     port: 3890
-    protocol: tcp
-    periodSeconds: 15
-    
-  prometheus:
-    path: /-/healthy
-    port: 9090
-    periodSeconds: 20
-    
-  grafana:
-    path: /api/health
+    health_check:
+      path: "/health"
+      port: 3890
+      initial_delay_seconds: 30
+      period_seconds: 10
+      
+  - name: grafana
     port: 3000
-    periodSeconds: 20
+    health_check:
+      path: "/api/health"
+      port: 3000
+      initial_delay_seconds: 30
+      period_seconds: 10
+
+# Hostnames for external access
+hostnames:
+  - hostname: "${REDMICA_HOST}"
+    service_port: redmica:3000
+  - hostname: "grafana.${DOMAIN}"
+    service_port: grafana:3000
+
+# Shared volumes for persistent storage
+shared_volumes:
+  - name: postgres-data
+    size: "10Gi"
+    mount_path: "/var/lib/postgresql/data"
     
-  loki:
-    path: /ready
-    port: 3100
-    periodSeconds: 20
+  - name: redmica-files
+    size: "5Gi" 
+    mount_path: "/redmica/files"
+    
+  - name: ldap-data
+    size: "1Gi"
+    mount_path: "/var/lib/ldap"
+    
+  - name: prometheus-data
+    size: "5Gi"
+    mount_path: "/prometheus"
+    
+  - name: grafana-data
+    size: "1Gi"
+    mount_path: "/var/lib/grafana"
