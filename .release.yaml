@@ -1,13 +1,26 @@
 # Redstone Release.com Configuration
 # Following the "Built for Clarity" design philosophy
+# Using Helm chart deployment instead of docker-compose for better logging
 
-# Define which locations to look for configuration files
-configurationFiles:
-  dockerComposePath: ./docker-compose.yml
+# Helm configuration
+helm:
+  chart: ./helm/redstone
+  valuesFiles:
+    - ./helm/redstone/values.yaml
+  # Ensure Helm dependencies are updated before deployment
+  dependencyUpdate: true
 
 # Build configuration
 build:
   timeout: 1800  # 30 minutes, for larger builds
+  # Use pre-built images from Helm chart values
+  skipBuild: true
+  
+# Deployment strategy
+deployment:
+  strategy: helm
+  namespace: redstone
+  createNamespace: true
 
 # Static Environment Configuration with Git Tag-Based Deployments
 environments:
@@ -16,36 +29,69 @@ environments:
     branch: main
     autoDeployment: true
     persistence: true  # Static environment - doesn't get destroyed
-    resources:
-      cpu: 1
-      memory: 2Gi
-      replicas: 1
-    services:
-      redmica:
-        resources:
-          cpu: 1
-          memory: 1Gi
-        replicas: 1
-      postgres:
-        resources:
-          cpu: 0.5
-          memory: 1Gi
-        replicas: 1
-      ldap:
-        resources:
-          cpu: 0.2
-          memory: 256Mi
-        replicas: 1
-      prometheus:
-        resources:
-          cpu: 0.3
-          memory: 512Mi
-        replicas: 1
-      grafana:
-        resources:
-          cpu: 0.3
-          memory: 512Mi
-        replicas: 1
+    helm:
+      values:
+        redmica:
+          replicaCount: 1
+          image:
+            repository: ghcr.io/zacharyelston/redmica
+            tag: "3.2.3"
+            pullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+        postgresqlCustom:
+          primary:
+            resources:
+              limits:
+                cpu: 500m
+                memory: 1Gi
+              requests:
+                cpu: 250m
+                memory: 512Mi
+        ldap:
+          replicaCount: 1
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        prometheus:
+          server:
+            resources:
+              limits:
+                cpu: 300m
+                memory: 512Mi
+              requests:
+                cpu: 150m
+                memory: 256Mi
+        grafana:
+          resources:
+            limits:
+              cpu: 300m
+              memory: 512Mi
+            requests:
+              cpu: 150m
+              memory: 256Mi
+          ingress:
+            enabled: true
+            hosts:
+              - host: dev-grafana.redstone.example.com
+                paths:
+                  - path: /
+                    pathType: Prefix
+        # Enable logging stack
+        loki:
+          enabled: true
+        logging:
+          fluentBit:
+            enabled: true
     domains:
       - dev.redstone.example.com
       - dev-grafana.redstone.example.com
@@ -55,36 +101,69 @@ environments:
     tags: "v*-rc.*"  # e.g., v1.2.0-rc.1, v1.2.0-rc.2
     autoDeployment: false  # Requires manual approval
     persistence: true  # Static environment - doesn't get destroyed
-    resources:
-      cpu: 1.5
-      memory: 3Gi
-      replicas: 1
-    services:
-      redmica:
-        resources:
-          cpu: 1.5
-          memory: 2Gi
-        replicas: 1
-      postgres:
-        resources:
-          cpu: 0.8
-          memory: 1.5Gi
-        replicas: 1
-      ldap:
-        resources:
-          cpu: 0.3
-          memory: 384Mi
-        replicas: 1
-      prometheus:
-        resources:
-          cpu: 0.5
-          memory: 768Mi
-        replicas: 1
-      grafana:
-        resources:
-          cpu: 0.4
-          memory: 768Mi
-        replicas: 1
+    helm:
+      values:
+        redmica:
+          replicaCount: 1
+          image:
+            repository: ghcr.io/zacharyelston/redmica
+            tag: "3.2.3"
+            pullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+        postgresqlCustom:
+          primary:
+            resources:
+              limits:
+                cpu: 800m
+                memory: 1500Mi
+              requests:
+                cpu: 400m
+                memory: 750Mi
+        ldap:
+          replicaCount: 1
+          resources:
+            limits:
+              cpu: 300m
+              memory: 384Mi
+            requests:
+              cpu: 150m
+              memory: 192Mi
+        prometheus:
+          server:
+            resources:
+              limits:
+                cpu: 500m
+                memory: 768Mi
+              requests:
+                cpu: 250m
+                memory: 384Mi
+        grafana:
+          resources:
+            limits:
+              cpu: 400m
+              memory: 768Mi
+            requests:
+              cpu: 200m
+              memory: 384Mi
+          ingress:
+            enabled: true
+            hosts:
+              - host: staging-grafana.redstone.example.com
+                paths:
+                  - path: /
+                    pathType: Prefix
+        # Enable logging stack
+        loki:
+          enabled: true
+        logging:
+          fluentBit:
+            enabled: true
     domains:
       - staging.redstone.example.com
       - staging-grafana.redstone.example.com
@@ -95,57 +174,93 @@ environments:
     exclude_tags: "v*-rc.*"  # Exclude release candidates
     autoDeployment: false  # Always requires manual approval
     persistence: true  # Static environment - doesn't get destroyed
-    resources:
-      cpu: 2
-      memory: 4Gi
-      replicas: 2
-    services:
-      redmica:
-        resources:
-          cpu: 2
-          memory: 2Gi
-        replicas: 2
-      postgres:
-        resources:
-          cpu: 1
-          memory: 2Gi
-        replicas: 1  # Primary DB - replication handled separately
-      ldap:
-        resources:
-          cpu: 0.5
-          memory: 512Mi
-        replicas: 2
-      prometheus:
-        resources:
-          cpu: 1
-          memory: 1Gi
-        replicas: 1
-      grafana:
-        resources:
-          cpu: 0.5
-          memory: 1Gi
-        replicas: 1
+    helm:
+      values:
+        redmica:
+          replicaCount: 2
+          image:
+            repository: ghcr.io/zacharyelston/redmica
+            tag: "3.2.3"
+            pullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+            requests:
+              cpu: 1000m
+              memory: 1Gi
+        postgresqlCustom:
+          primary:
+            resources:
+              limits:
+                cpu: 1000m
+                memory: 2Gi
+              requests:
+                cpu: 500m
+                memory: 1Gi
+        ldap:
+          replicaCount: 2
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+        prometheus:
+          server:
+            resources:
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+              requests:
+                cpu: 500m
+                memory: 512Mi
+        grafana:
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          ingress:
+            enabled: true
+            hosts:
+              - host: grafana.redstone.example.com
+                paths:
+                  - path: /
+                    pathType: Prefix
+        # Enable logging stack
+        loki:
+          enabled: true
+        logging:
+          fluentBit:
+            enabled: true
     domains:
       - redstone.example.com
       - grafana.redstone.example.com
 
-# Health check configuration
+# Health check configuration for Helm deployments
 healthChecks:
   redmica:
     path: /
     port: 3000
-  postgres:
+  postgresql:
     port: 5432
     tcp: true
   ldap:
-    port: 389
+    port: 3890
     tcp: true
   prometheus:
     path: /-/healthy
     port: 9090
   grafana:
     path: /api/health
-    port: 3001
+    port: 3000
+  loki:
+    path: /ready
+    port: 3100
 
 # Data persistence configuration
 persistence:
