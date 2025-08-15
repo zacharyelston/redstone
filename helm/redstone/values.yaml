@@ -192,9 +192,9 @@ ldap:
           name: redstone-secrets
           key: ldap-admin-password
 
-# Loki Configuration (using Grafana chart)
+# Loki Configuration (using Grafana chart) - DISABLED to avoid grafana-agent-operator ClusterRole conflicts
 loki:
-  enabled: true
+  enabled: false
   loki:
     auth_enabled: false
     commonConfig:

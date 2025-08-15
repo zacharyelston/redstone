@@ -19,7 +19,7 @@ build:
 # Deployment strategy
 deployment:
   strategy: helm
-  namespace: redstone
+  namespace: rs1
   createNamespace: true
 
 # Static Environment Configuration with Git Tag-Based Deployments
