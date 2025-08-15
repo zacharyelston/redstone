@@ -192,9 +192,9 @@ ldap:
           name: redstone-secrets
           key: ldap-admin-password
 
-# Loki Configuration (using Grafana chart)
+# Loki Configuration (using Grafana chart) - DISABLED to avoid grafana-agent-operator ClusterRole conflicts
 loki:
-  enabled: true
+  enabled: false
   loki:
     auth_enabled: false
     commonConfig:
@@ -233,6 +233,29 @@ grafana:
     server:
       serve_from_sub_path: true
       root_url: "%(protocol)s://%(domain)s/grafana/"
+  
+  # Fix ClusterRole naming conflicts between environments
+  rbac:
+    create: false
+    namespaced: true
+  
+  # Disable all optional components that might create ClusterRoles
+  sidecar:
+    dashboards:
+      enabled: false
+    datasources:
+      enabled: false
+  
+  # Disable agent operator and other optional components that create ClusterRoles
+  agent:
+    enabled: false
+  
+  # Explicitly disable grafana-agent-operator
+  grafana-agent-operator:
+    enabled: false
+  
+  grafanaOperator:
+    enabled: false
     
   service:
     type: ClusterIP
@@ -257,11 +280,28 @@ grafana:
     enabled: true
     size: 2Gi
   
-  datasources: {}
-  
-  # Use ConfigMap-based datasource provisioning instead
-  datasourcesConfigMaps:
-    - redstone-grafana-datasources
+  # Mount ConfigMaps for provisioning
+  extraConfigmapMounts:
+    - name: datasources-configmap
+      mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+      configMap: redstone-grafana-datasources
+      subPath: datasources.yaml
+      readOnly: true
+    - name: dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-dashboards
+      configMap: redstone-grafana-dashboards
+      subPath: ""
+      readOnly: true
+    - name: metrics-dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-metrics
+      configMap: redstone-grafana-dashboard-metrics
+      subPath: ""
+      readOnly: true
+    - name: working-dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-working
+      configMap: redstone-grafana-dashboard-working
+      subPath: ""
+      readOnly: true
   
   dashboardProviders:
     dashboardproviders.yaml:
@@ -291,11 +331,6 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/redstone-working
-  
-  dashboardsConfigMaps:
-    redstone-dashboards: "redstone-grafana-dashboards"
-    redstone-metrics: "redstone-grafana-dashboard-metrics"
-    redstone-working: "redstone-grafana-dashboard-working"
 
 # Prometheus Configuration (using Prometheus chart)
 prometheus:

@@ -48,7 +48,7 @@ variables:
   - name: REDMINE_DB_USERNAME
     description: Redmica database username
     required: true
-    defaultValue: postgres
+    defaultValue: redmica
     
   - name: REDMINE_SECRET_KEY_BASE
     description: Secret key base for Rails
@@ -60,24 +60,14 @@ variables:
     required: true
     defaultValue: redstone.local
     
-  # LDAP configuration
-  - name: LDAP_DOMAIN
-    description: LDAP domain
-    required: true
-    defaultValue: redstone.local
-    
-  - name: LDAP_ORGANISATION
-    description: LDAP organization name
-    required: true
-    defaultValue: Redstone Project
-    
-  - name: LDAP_ADMIN_PASSWORD
-    description: LDAP admin password
+  # LDAP configuration (LLDAP-specific)
+  - name: LDAP_JWT_SECRET
+    description: JWT secret for LLDAP authentication
     required: true
     secret: true
     
-  - name: LDAP_CONFIG_PASSWORD
-    description: LDAP config password
+  - name: LDAP_ADMIN_PASSWORD
+    description: LDAP admin password for LLDAP
     required: true
     secret: true
     
