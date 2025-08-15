@@ -246,8 +246,12 @@ grafana:
     datasources:
       enabled: false
   
-  # Disable agent operator and other optional components
+  # Disable agent operator and other optional components that create ClusterRoles
   agent:
+    enabled: false
+  
+  # Explicitly disable grafana-agent-operator
+  grafana-agent-operator:
     enabled: false
   
   grafanaOperator:

@@ -20,7 +20,7 @@ resources:
 
 charts:
   - directory: helm/redstone
-    name: redstone
+    name: rs1
     values: values.yaml
 
 workflows:
@@ -28,12 +28,12 @@ workflows:
     parallelize:
       - step: charts
         tasks:
-          - charts.redstone
+          - charts.rs1
   - name: patch
     parallelize:
       - step: charts
         tasks:
-          - charts.redstone
+          - charts.rs1
   - name: teardown
     parallelize:
       - step: remove-environment
