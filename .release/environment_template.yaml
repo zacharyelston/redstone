@@ -6,130 +6,153 @@ environment:
   type: ${ENVIRONMENT_TYPE}
   description: ${ENVIRONMENT_DESCRIPTION}
 
-# Service configuration
-services:
-  redmica:
-    replicas: ${REDMICA_REPLICAS:-1}
-    image: redmine:5.0.5
-    env:
-      - name: REDMINE_DB_POSTGRES
-        value: postgres
-      - name: REDMINE_DB_DATABASE
-        value: ${REDMINE_DB_DATABASE:-redmica}
-      - name: REDMINE_DB_USERNAME
-        value: ${REDMINE_DB_USERNAME:-postgres}
-      - name: REDMINE_DB_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: postgres-credentials
-            key: password
-      - name: REDMINE_SECRET_KEY_BASE
-        valueFrom:
-          secretKeyRef:
-            name: redmica-secrets
-            key: secret-key-base
-    ingress:
+# Helm values configuration
+helm:
+  values:
+    redmica:
+      replicaCount: ${REDMICA_REPLICAS:-1}
+      image:
+        repository: redmica/redmica
+        tag: "3.1.0"
+        pullPolicy: IfNotPresent
+      env:
+        - name: RAILS_ENV
+          value: "production"
+        - name: REDMINE_DB_ADAPTER
+          value: "postgresql"
+        - name: REDMINE_DB_HOST
+          value: "redstone-postgresql-custom"
+        - name: REDMINE_DB_DATABASE
+          value: ${REDMINE_DB_DATABASE:-redmica}
+        - name: REDMINE_DB_USERNAME
+          value: ${REDMINE_DB_USERNAME:-redmica}
+        - name: REDMINE_DB_PASSWORD
+          value: ${POSTGRES_PASSWORD:-redmica123}
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: redstone-secrets
+              key: secret-key-base
+    
+    postgresqlCustom:
       enabled: true
-      host: ${REDMICA_HOST}
-      tls: true
-      
-  postgres:
-    replicas: 1
-    image: postgres:15
-    env:
-      - name: POSTGRES_USER
-        value: ${POSTGRES_USER:-postgres}
-      - name: POSTGRES_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: postgres-credentials
-            key: password
-      - name: POSTGRES_DB
-        value: ${POSTGRES_DB:-redmica}
-    persistence:
+      auth:
+        postgresPassword: ${POSTGRES_PASSWORD:-redstone123}
+        username: ${REDMINE_DB_USERNAME:-redmica}
+        password: ${POSTGRES_PASSWORD:-redmica123}
+        database: ${REDMINE_DB_DATABASE:-redmica}
+      primary:
+        persistence:
+          enabled: true
+          size: ${POSTGRES_STORAGE_SIZE:-8Gi}
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+    
+    ldap:
       enabled: true
-      storageClass: ${STORAGE_CLASS:-standard}
-      size: ${POSTGRES_STORAGE_SIZE:-10Gi}
-      
-  ldap:
-    replicas: 1
-    image: osixia/openldap:1.5.0
-    env:
-      - name: LDAP_DOMAIN
-        value: ${LDAP_DOMAIN:-redstone.local}
-      - name: LDAP_ORGANISATION
-        value: ${LDAP_ORGANISATION:-Redstone Project}
-      - name: LDAP_ADMIN_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: ldap-credentials
-            key: admin-password
-      - name: LDAP_CONFIG_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: ldap-credentials
-            key: config-password
-      - name: LDAP_TLS
-        value: "false"
-    persistence:
+      image:
+        repository: lldap/lldap
+        tag: "latest"
+        pullPolicy: IfNotPresent
+      replicaCount: 1
+      service:
+        type: ClusterIP
+        port: 3890
+        targetPort: 3890
+      env:
+        - name: LLDAP_LDAP_PORT
+          value: "3890"
+        - name: LLDAP_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: redstone-secrets
+              key: ldap-jwt-secret
+        - name: LLDAP_LDAP_USER_PASS
+          valueFrom:
+            secretKeyRef:
+              name: redstone-secrets
+              key: ldap-admin-password
+      resources:
+        limits:
+          cpu: 200m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+    
+    grafana:
       enabled: true
-      storageClass: ${STORAGE_CLASS:-standard}
-      size: ${LDAP_STORAGE_SIZE:-1Gi}
-      
-  grafana:
-    replicas: 1
-    image: grafana/grafana:latest
-    env:
-      - name: GF_SECURITY_ADMIN_USER
-        value: ${GF_ADMIN_USER:-admin}
-      - name: GF_SECURITY_ADMIN_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: grafana-credentials
-            key: admin-password
-      - name: GF_USERS_ALLOW_SIGN_UP
-        value: "false"
-      - name: GF_INSTALL_PLUGINS
-        value: "grafana-piechart-panel"
-    ingress:
+      adminPassword: ${GF_ADMIN_PASSWORD:-admin123}
+      service:
+        type: ClusterIP
+        port: 3000
+      ingress:
+        enabled: true
+        ingressClassName: nginx
+        hosts:
+          - ${GRAFANA_HOST:-grafana.local}
+        path: /
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+      persistence:
+        enabled: true
+        size: ${GRAFANA_STORAGE_SIZE:-2Gi}
+    
+    prometheus:
       enabled: true
-      host: ${GRAFANA_HOST}
-      path: /grafana
-      tls: true
-    persistence:
+      server:
+        persistentVolume:
+          enabled: true
+          size: ${PROMETHEUS_STORAGE_SIZE:-8Gi}
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+      alertmanager:
+        enabled: false
+      pushgateway:
+        enabled: false
+      nodeExporter:
+        enabled: true
+    
+    loki:
       enabled: true
-      storageClass: ${STORAGE_CLASS:-standard}
-      size: ${GRAFANA_STORAGE_SIZE:-1Gi}
-      
-  prometheus:
-    replicas: 1
-    image: prom/prometheus:latest
-    ingress:
-      enabled: true
-      host: ${PROMETHEUS_HOST}
-      path: /prometheus
-      tls: true
-    persistence:
-      enabled: true
-      storageClass: ${STORAGE_CLASS:-standard}
-      size: ${PROMETHEUS_STORAGE_SIZE:-5Gi}
+      singleBinary:
+        replicas: 1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        persistence:
+          enabled: true
+          size: 10Gi
+    
+    logging:
+      fluentBit:
+        enabled: true
 
-# Secret configurations
+# Secret configurations for Helm deployment
 secrets:
-  postgres-credentials:
-    - name: password
-      value: ${POSTGRES_PASSWORD}
-      
-  redmica-secrets:
+  redstone-secrets:
     - name: secret-key-base
       value: ${REDMINE_SECRET_KEY_BASE}
-      
-  ldap-credentials:
-    - name: admin-password
+    - name: ldap-jwt-secret
+      value: ${LDAP_JWT_SECRET}
+    - name: ldap-admin-password
       value: ${LDAP_ADMIN_PASSWORD}
-    - name: config-password
-      value: ${LDAP_CONFIG_PASSWORD}
-      
-  grafana-credentials:
-    - name: admin-password
-      value: ${GF_ADMIN_PASSWORD}

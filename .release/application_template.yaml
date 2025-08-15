@@ -6,8 +6,12 @@ application:
   name: redstone
   description: A modular, cloud-native Redmica deployment with monitoring and LDAP authentication
 
-# Reference to the main docker compose configuration
-dockerCompose: ./docker-compose.yml
+# Reference to the Helm chart configuration
+helm:
+  chart: ./helm/redstone
+  valuesFiles:
+    - ./helm/redstone/values.yaml
+  dependencyUpdate: true
 
 # Resource limits for services
 resources:
@@ -62,7 +66,7 @@ healthChecks:
     periodSeconds: 15
     
   ldap:
-    port: 389
+    port: 3890
     protocol: tcp
     periodSeconds: 15
     
@@ -73,5 +77,10 @@ healthChecks:
     
   grafana:
     path: /api/health
-    port: 3001
+    port: 3000
+    periodSeconds: 20
+    
+  loki:
+    path: /ready
+    port: 3100
     periodSeconds: 20
