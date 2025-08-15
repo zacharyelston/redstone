@@ -34,8 +34,8 @@ environments:
         redmica:
           replicaCount: 1
           image:
-            repository: redmica/redmica
-            tag: "6.0.0"
+            repository: ghcr.io/zacharyelston/redmica
+            tag: "3.2.3"
             pullPolicy: IfNotPresent
           resources:
             limits:
@@ -106,8 +106,8 @@ environments:
         redmica:
           replicaCount: 1
           image:
-            repository: redmica/redmica
-            tag: "6.0.0"
+            repository: ghcr.io/zacharyelston/redmica
+            tag: "3.2.3"
             pullPolicy: IfNotPresent
           resources:
             limits:
@@ -179,8 +179,8 @@ environments:
         redmica:
           replicaCount: 2
           image:
-            repository: redmica/redmica
-            tag: "6.0.0"
+            repository: ghcr.io/zacharyelston/redmica
+            tag: "3.2.3"
             pullPolicy: IfNotPresent
           resources:
             limits:
