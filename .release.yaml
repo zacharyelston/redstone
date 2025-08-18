@@ -19,7 +19,7 @@ build:
 # Deployment strategy
 deployment:
   strategy: helm
-  namespace: rs1
+  namespace: myapp
   createNamespace: true
 
 # Static Environment Configuration with Git Tag-Based Deployments
