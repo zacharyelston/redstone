@@ -38,3 +38,13 @@ Thumbs.db
 .env
 customers/*.env
 *.env
+
+# Terraform sensitive files
+terraform/environments/*-credentials.env
+terraform/bootstrap/terraform.tfstate*
+terraform/bootstrap/.terraform/
+terraform/terraform.tfstate*
+terraform/.terraform/
+*.tfplan
+*.tfstate
+*.tfstate.backup
