@@ -1,0 +1,62 @@
+# Production Environment Template for Orryx
+# Following the "Built for Clarity" design philosophy
+
+environment:
+  name: orryx-production
+  type: production
+  description: Production environment for Orryx project management platform
+
+# Environment variable mappings from Release.com
+mapping:
+  COMMIT_HASH: RELEASE_COMMIT_SHA
+  CLUSTER_REGION: RELEASE_CLUSTER_REGION
+  NAMESPACE: RELEASE_NAMESPACE
+
+# Production environment variables
+defaults:
+  - key: RAILS_ENV
+    value: production
+  - key: LOG_LEVEL
+    value: warn
+  - key: REDMINE_DB_HOSTNAME
+    value: orryx-postgresql-prod
+  - key: REDMINE_DB_DATABASE
+    value: orryx_production
+  - key: REDMINE_DB_USERNAME
+    value: orryx_prod
+  - key: LDAP_HOST
+    value: orryx-lldap-prod
+  - key: LDAP_PORT
+    value: "3890"
+  - key: REDIS_URL
+    value: redis://orryx-redis-prod:6379/0
+
+# Service-specific environment variables
+services:
+  redmica:
+    - key: REDMINE_DB_PASSWORD
+      secret: orryx-prod-db-password
+    - key: REDMINE_SECRET_KEY_BASE
+      secret: orryx-prod-secret-key
+  lldap:
+    - key: LLDAP_JWT_SECRET
+      secret: orryx-prod-lldap-jwt
+    - key: LLDAP_LDAP_USER_PASS
+      secret: orryx-prod-lldap-password
+
+# Resource configuration for production
+resources:
+  cpu:
+    requests: 1000m
+    limits: 2000m
+  memory:
+    requests: 1Gi
+    limits: 2Gi
+  replicas: 2
+
+# Health checks
+health_checks:
+  - path: /health
+    port: 3000
+    initial_delay: 60
+    period: 30
