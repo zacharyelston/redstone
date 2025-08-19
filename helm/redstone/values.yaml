@@ -354,6 +354,9 @@ prometheus:
     enabled: false
   pushgateway:
     enabled: false
+  # Disable kube-state-metrics to avoid ClusterRole conflicts in ephemeral environments
+  kubeStateMetrics:
+    enabled: false
   nodeExporter:
     enabled: true
     # Resource limits for node exporter pods
