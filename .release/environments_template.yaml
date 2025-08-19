@@ -1,0 +1,180 @@
+# Redstone Environments Template for Release.com
+# Following the "Built for Clarity" design philosophy
+# Defines multiple environment configurations for dev, staging, and production
+
+environments:
+  # Development Environment
+  - name: "orryx-dev"
+    type: "development"
+    description: "Development environment for Orryx project"
+    cluster: "${DEV_CLUSTER_NAME}"
+    region: "${AWS_REGION}"
+    namespace: "orryx-dev"
+    
+    # Development-specific variables
+    variables:
+      - key: RAILS_ENV
+        value: "development"
+      - key: LOG_LEVEL
+        value: "debug"
+      - key: REDMINE_DB_HOSTNAME
+        value: "redstone-postgresql-dev"
+      - key: REDMINE_DB_NAME
+        value: "redmine_dev"
+      - key: REDMINE_DB_USERNAME
+        value: "redmine_dev"
+      - key: REDIS_URL
+        value: "redis://redstone-redis-dev:6379/0"
+      - key: LLDAP_LDAP_HOST
+        value: "redstone-lldap-dev"
+      - key: GRAFANA_PORT
+        value: "3001"
+      - key: PROMETHEUS_PORT
+        value: "9090"
+      - key: LOKI_PORT
+        value: "3100"
+    
+    # Development secrets (managed by Release.com)
+    secrets:
+      - key: REDMINE_DB_PASSWORD
+        from: "redstone-dev-db-password"
+      - key: REDMINE_SECRET_KEY_BASE
+        from: "redstone-dev-secret-key"
+      - key: LLDAP_JWT_SECRET
+        from: "redstone-dev-lldap-jwt"
+      - key: LLDAP_LDAP_USER_PASS
+        from: "redstone-dev-lldap-password"
+
+  # Staging Environment
+  - name: "orryx-staging"
+    type: "staging"
+    description: "Staging environment for Orryx project"
+    cluster: "${STAGING_CLUSTER_NAME}"
+    region: "${AWS_REGION}"
+    namespace: "orryx-staging"
+    
+    # Staging-specific variables
+    variables:
+      - key: RAILS_ENV
+        value: "production"
+      - key: LOG_LEVEL
+        value: "info"
+      - key: REDMINE_DB_HOSTNAME
+        value: "redstone-postgresql-staging"
+      - key: REDMINE_DB_NAME
+        value: "redmine_staging"
+      - key: REDMINE_DB_USERNAME
+        value: "redmine_staging"
+      - key: REDIS_URL
+        value: "redis://redstone-redis-staging:6379/0"
+      - key: LLDAP_LDAP_HOST
+        value: "redstone-lldap-staging"
+      - key: GRAFANA_PORT
+        value: "3001"
+      - key: PROMETHEUS_PORT
+        value: "9090"
+      - key: LOKI_PORT
+        value: "3100"
+    
+    # Staging secrets
+    secrets:
+      - key: REDMINE_DB_PASSWORD
+        from: "redstone-staging-db-password"
+      - key: REDMINE_SECRET_KEY_BASE
+        from: "redstone-staging-secret-key"
+      - key: LLDAP_JWT_SECRET
+        from: "redstone-staging-lldap-jwt"
+      - key: LLDAP_LDAP_USER_PASS
+        from: "redstone-staging-lldap-password"
+
+  # Production Environment
+  - name: "orryx-prod"
+    type: "production"
+    description: "Production environment for Orryx project"
+    cluster: "${PROD_CLUSTER_NAME}"
+    region: "${AWS_REGION}"
+    namespace: "orryx-prod"
+    
+    # Production-specific variables
+    variables:
+      - key: RAILS_ENV
+        value: "production"
+      - key: LOG_LEVEL
+        value: "warn"
+      - key: REDMINE_DB_HOSTNAME
+        value: "redstone-postgresql-prod"
+      - key: REDMINE_DB_NAME
+        value: "redmine_production"
+      - key: REDMINE_DB_USERNAME
+        value: "redmine_prod"
+      - key: REDIS_URL
+        value: "redis://redstone-redis-prod:6379/0"
+      - key: LLDAP_LDAP_HOST
+        value: "redstone-lldap-prod"
+      - key: GRAFANA_PORT
+        value: "3001"
+      - key: PROMETHEUS_PORT
+        value: "9090"
+      - key: LOKI_PORT
+        value: "3100"
+    
+    # Production secrets
+    secrets:
+      - key: REDMINE_DB_PASSWORD
+        from: "redstone-prod-db-password"
+      - key: REDMINE_SECRET_KEY_BASE
+        from: "redstone-prod-secret-key"
+      - key: LLDAP_JWT_SECRET
+        from: "redstone-prod-lldap-jwt"
+      - key: LLDAP_LDAP_USER_PASS
+        from: "redstone-prod-lldap-password"
+
+# Global configuration applied to all environments
+global:
+  # Helm chart configuration
+  helm:
+    chart: "redstone"
+    version: "${HELM_CHART_VERSION}"
+    repository: "${HELM_REPOSITORY_URL}"
+  
+  # Common resource limits
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  
+  # Health check configuration
+  health:
+    readiness_probe:
+      path: "/health"
+      port: 3000
+      initial_delay: 30
+      period: 10
+    liveness_probe:
+      path: "/health"
+      port: 3000
+      initial_delay: 60
+      period: 30
+
+# Environment promotion rules
+promotion:
+  # Automatic promotion from dev to staging
+  - from: "orryx-dev"
+    to: "orryx-staging"
+    trigger: "manual"
+    conditions:
+      - all_tests_pass: true
+      - security_scan_pass: true
+  
+  # Manual promotion from staging to production
+  - from: "orryx-staging"
+    to: "orryx-prod"
+    trigger: "manual"
+    conditions:
+      - all_tests_pass: true
+      - security_scan_pass: true
+      - performance_test_pass: true
+      - approval_required: true

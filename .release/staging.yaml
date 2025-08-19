@@ -1,0 +1,62 @@
+# Staging Environment Template for Orryx
+# Following the "Built for Clarity" design philosophy
+
+environment:
+  name: orryx-staging
+  type: staging
+  description: Staging environment for Orryx project management platform
+
+# Environment variable mappings from Release.com
+mapping:
+  COMMIT_HASH: RELEASE_COMMIT_SHA
+  CLUSTER_REGION: RELEASE_CLUSTER_REGION
+  NAMESPACE: RELEASE_NAMESPACE
+
+# Staging environment variables
+defaults:
+  - key: RAILS_ENV
+    value: production
+  - key: LOG_LEVEL
+    value: info
+  - key: REDMINE_DB_HOSTNAME
+    value: orryx-postgresql-staging
+  - key: REDMINE_DB_DATABASE
+    value: orryx_staging
+  - key: REDMINE_DB_USERNAME
+    value: orryx_staging
+  - key: LDAP_HOST
+    value: orryx-lldap-staging
+  - key: LDAP_PORT
+    value: "3890"
+  - key: REDIS_URL
+    value: redis://orryx-redis-staging:6379/0
+
+# Service-specific environment variables
+services:
+  redmica:
+    - key: REDMINE_DB_PASSWORD
+      secret: orryx-staging-db-password
+    - key: REDMINE_SECRET_KEY_BASE
+      secret: orryx-staging-secret-key
+  lldap:
+    - key: LLDAP_JWT_SECRET
+      secret: orryx-staging-lldap-jwt
+    - key: LLDAP_LDAP_USER_PASS
+      secret: orryx-staging-lldap-password
+
+# Resource configuration for staging
+resources:
+  cpu:
+    requests: 500m
+    limits: 1500m
+  memory:
+    requests: 1Gi
+    limits: 2Gi
+  replicas: 1
+
+# Health checks
+health_checks:
+  - path: /health
+    port: 3000
+    initial_delay: 30
+    period: 10
