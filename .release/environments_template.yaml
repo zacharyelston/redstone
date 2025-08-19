@@ -4,12 +4,12 @@
 
 environments:
   # Development Environment
-  - name: "redstone-dev"
+  - name: "orryx-dev"
     type: "development"
-    description: "Development environment for Redstone project"
+    description: "Development environment for Orryx project"
     cluster: "${DEV_CLUSTER_NAME}"
     region: "${AWS_REGION}"
-    namespace: "rs1-dev"
+    namespace: "orryx-dev"
     
     # Development-specific variables
     variables:
@@ -46,12 +46,12 @@ environments:
         from: "redstone-dev-lldap-password"
 
   # Staging Environment
-  - name: "redstone-staging"
+  - name: "orryx-staging"
     type: "staging"
-    description: "Staging environment for Redstone project"
+    description: "Staging environment for Orryx project"
     cluster: "${STAGING_CLUSTER_NAME}"
     region: "${AWS_REGION}"
-    namespace: "rs1-staging"
+    namespace: "orryx-staging"
     
     # Staging-specific variables
     variables:
@@ -88,12 +88,12 @@ environments:
         from: "redstone-staging-lldap-password"
 
   # Production Environment
-  - name: "redstone-prod"
+  - name: "orryx-prod"
     type: "production"
-    description: "Production environment for Redstone project"
+    description: "Production environment for Orryx project"
     cluster: "${PROD_CLUSTER_NAME}"
     region: "${AWS_REGION}"
-    namespace: "rs1-prod"
+    namespace: "orryx-prod"
     
     # Production-specific variables
     variables:
@@ -162,16 +162,16 @@ global:
 # Environment promotion rules
 promotion:
   # Automatic promotion from dev to staging
-  - from: "redstone-dev"
-    to: "redstone-staging"
+  - from: "orryx-dev"
+    to: "orryx-staging"
     trigger: "manual"
     conditions:
       - all_tests_pass: true
       - security_scan_pass: true
   
   # Manual promotion from staging to production
-  - from: "redstone-staging"
-    to: "redstone-prod"
+  - from: "orryx-staging"
+    to: "orryx-prod"
     trigger: "manual"
     conditions:
       - all_tests_pass: true
