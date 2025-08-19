@@ -3,7 +3,6 @@ execution_type: server
 context: release-customer-us-west-2
 domain: rls.sh
 repo_name: "orryx"
-description: "Orryx project management platform"
 tracking_branch: main
 
 environment_templates:
