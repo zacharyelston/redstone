@@ -16,8 +16,8 @@ redmica:
   
   # Optimized custom Redmica image (60% smaller than previous builds)
   image:
-    repository: ghcr.io/zacharyelston/redmica
-    tag: "v3.2.8"
+    repository: ghcr.io/zacharyelston/redmica-optimized
+    tag: "latest"
     pullPolicy: IfNotPresent
   
   replicaCount: 1
