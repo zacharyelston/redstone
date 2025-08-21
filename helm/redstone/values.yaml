@@ -7,6 +7,8 @@ global:
   storageClass: ""
   # Ephemeral environment settings
   ephemeralEnv: false
+  # Release.com namespace support
+  releaseNamespace: ""
 
 # Redmica (Redmine fork) Configuration
 redmica:
@@ -341,24 +343,20 @@ prometheus:
     podLabels:
       app.kubernetes.io/name: prometheus
       app.kubernetes.io/component: server
+    # Disable ClusterRole for server
+    clusterRole: false
   alertmanager:
     enabled: false
   pushgateway:
     enabled: false
   nodeExporter:
-    enabled: true
-    # Resource limits for node exporter pods
-    nodeExporter:
-      resources:
-        limits:
-          cpu: 100m
-          memory: 128Mi
-        requests:
-          cpu: 50m
-          memory: 64Mi
+    enabled: false  # Disable to avoid ClusterRole conflicts
   # Fix ClusterRole conflicts for ephemeral environments
   kube-state-metrics:
     enabled: false
+  # Disable RBAC creation to avoid ClusterRole conflicts
+  rbac:
+    create: false
 
 # Logging Configuration
 logging:
@@ -453,3 +451,21 @@ logging:
             Port 3100
             Labels job=fluentbit
             Auto_Kubernetes_Labels On
+
+# BOFH Configuration (testing container)
+bofh:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: ubuntu
+    tag: "22.04"
+    pullPolicy: IfNotPresent
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
