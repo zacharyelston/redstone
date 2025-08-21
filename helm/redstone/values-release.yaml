@@ -1,0 +1,45 @@
+# Override values for release.com ephemeral environments
+# Use with: helm install redstone ./redstone -f ./redstone/values-release.yaml
+
+# Use x86_64 architecture images
+logging:
+  fluentBit:
+    image:
+      tag: "2.9.1-amd64"  # x86_64 architecture for release.com
+    enableHostMounts: false  # Disable host mounts in ephemeral environments
+
+# Use public Redmine image instead of local build
+redmica:
+  image:
+    repository: redmine
+    tag: "5.1.4"
+    pullPolicy: IfNotPresent
+
+# Minimal resource requests for ephemeral environments
+redmica:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+ldap:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+postgresqlCustom:
+  primary:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi

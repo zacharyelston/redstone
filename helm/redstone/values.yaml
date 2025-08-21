@@ -382,7 +382,9 @@ logging:
     enabled: true
     image:
       repository: grafana/fluent-bit-plugin-loki
-      tag: "2.9.1-amd64"  # Changed from arm64 to amd64 for x86_64 compatibility
+      # Architecture-specific tag - override with --set for different architectures
+      # Use "2.9.1-arm64" for ARM (Mac M1/M2) or "2.9.1-amd64" for x86_64 (release.com)
+      tag: "2.9.1-arm64"  
     
     # Disable host path mounts for ephemeral environments
     enableHostMounts: false

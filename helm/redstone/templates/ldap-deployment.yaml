@@ -20,6 +20,13 @@ spec:
         service: ldap
         component: authentication
     spec:
+      initContainers:
+        - name: init-ldap-data
+          image: busybox:1.35
+          command: ['sh', '-c', 'mkdir -p /data/db && chmod 777 /data/db']
+          volumeMounts:
+            - name: ldap-data
+              mountPath: /data
       containers:
         - name: ldap
           image: "{{ .Values.ldap.image.repository }}:{{ .Values.ldap.image.tag }}"
@@ -32,7 +39,26 @@ spec:
               containerPort: 3890
               protocol: TCP
           env:
-            {{- toYaml .Values.ldap.env | nindent 12 }}
+            - name: LLDAP_LDAP_PORT
+              value: "3890"
+            - name: LLDAP_HTTP_PORT
+              value: "17170"
+            - name: LLDAP_LDAP_BASE_DN
+              value: "dc=redstone,dc=local"
+            - name: LLDAP_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "redstone.fullname" . }}-app-secrets
+                  key: ldap-jwt-secret
+            - name: LLDAP_LDAP_USER_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "redstone.fullname" . }}-app-secrets
+                  key: ldap-admin-password
+            - name: LLDAP_DATABASE_URL
+              value: "sqlite:///data/db/lldap.db"
+            - name: LLDAP_VERBOSE
+              value: "true"
           resources:
             {{- toYaml .Values.ldap.resources | nindent 12 }}
           livenessProbe:

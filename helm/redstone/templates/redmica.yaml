@@ -51,7 +51,17 @@ spec:
           value: {{ .value | quote }}
           {{- else if .valueFrom }}
           valueFrom:
+            {{- if .valueFrom.secretKeyRef }}
+            secretKeyRef:
+              {{- if eq .valueFrom.secretKeyRef.name "redstone-secrets" }}
+              name: {{ include "redstone.fullname" $ }}-app-secrets
+              {{- else }}
+              name: {{ .valueFrom.secretKeyRef.name }}
+              {{- end }}
+              key: {{ .valueFrom.secretKeyRef.key }}
+            {{- else }}
             {{- toYaml .valueFrom | nindent 12 }}
+            {{- end }}
           {{- end }}
         {{- end }}
         {{- with .Values.redmica.livenessProbe }}
