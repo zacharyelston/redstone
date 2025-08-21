@@ -46,29 +46,27 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /fluent-bit/etc
+            # Conditionally mount host paths only if available
+            {{- if .Values.logging.fluentBit.enableHostMounts }}
             - name: varlog
               mountPath: /var/log
               readOnly: true
             - name: varlibdockercontainers
               mountPath: /var/lib/docker/containers
               readOnly: true
-            - name: etcmachineid
-              mountPath: /etc/machine-id
-              readOnly: true
+            {{- end }}
       volumes:
         - name: config
           configMap:
             name: {{ include "redstone.fullname" . }}-fluent-bit-config
+        {{- if .Values.logging.fluentBit.enableHostMounts }}
         - name: varlog
           hostPath:
             path: /var/log
         - name: varlibdockercontainers
           hostPath:
             path: /var/lib/docker/containers
-        - name: etcmachineid
-          hostPath:
-            path: /etc/machine-id
-            type: File
+        {{- end }}
       tolerations:
         - key: node-role.kubernetes.io/master
           operator: Exists
