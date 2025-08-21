@@ -5,6 +5,8 @@ global:
   imageRegistry: ""
   imagePullSecrets: []
   storageClass: ""
+  # Ephemeral environment settings
+  ephemeralEnv: false
 
 # Redmica (Redmine fork) Configuration
 redmica:
@@ -14,7 +16,7 @@ redmica:
   image:
     repository: redmica
     tag: "local"
-    pullPolicy: Never
+    pullPolicy: IfNotPresent
   
   replicaCount: 1
   
@@ -113,17 +115,6 @@ postgresqlCustom:
       requests:
         cpu: 250m
         memory: 256Mi
-  primary:
-    persistence:
-      enabled: true
-      size: 8Gi
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 250m
-        memory: 256Mi
 
 # Redis Configuration (using Bitnami chart)
 redis:
@@ -192,9 +183,9 @@ ldap:
           name: redstone-secrets
           key: ldap-admin-password
 
-# Loki Configuration (using Grafana chart) - DISABLED to avoid grafana-agent-operator ClusterRole conflicts
+# Loki Configuration (using Grafana chart) - Re-enabled with ClusterRole conflicts resolved
 loki:
-  enabled: false
+  enabled: true
   loki:
     auth_enabled: false
     commonConfig:
@@ -365,6 +356,9 @@ prometheus:
         requests:
           cpu: 50m
           memory: 64Mi
+  # Fix ClusterRole conflicts for ephemeral environments
+  kube-state-metrics:
+    enabled: false
 
 # Logging Configuration
 logging:
@@ -373,7 +367,7 @@ logging:
     enabled: true
     image:
       repository: grafana/fluent-bit-plugin-loki
-      tag: "2.9.1-arm64"
+      tag: "2.9.1"
     
     # Security context for non-root execution
     securityContext:
