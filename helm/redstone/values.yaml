@@ -344,17 +344,44 @@ prometheus:
       size: 8Gi
     resources:
       limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 250m
+        cpu: 200m
         memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
     # Add proper Kubernetes labels following best practices
     podLabels:
       app.kubernetes.io/name: prometheus
       app.kubernetes.io/component: server
     # Disable ClusterRole for server
     clusterRole: false
+    # Remove problematic extraArgs that cause duplicate arguments
+    extraArgs: {}
+    # Add startup probe for very slow WAL loading (515 segments)
+    startupProbe:
+      httpGet:
+        path: /-/ready
+        port: 9090
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 20  # Allow up to 10 minutes for startup
+    # Add readiness probe after startup completes
+    readinessProbe:
+      httpGet:
+        path: /-/ready
+        port: 9090
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+    # Add liveness probe with reasonable delay
+    livenessProbe:
+      httpGet:
+        path: /-/healthy
+        port: 9090
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 10
   alertmanager:
     enabled: false
   pushgateway:
