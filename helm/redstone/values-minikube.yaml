@@ -1,0 +1,90 @@
+# Minimal configuration for Minikube testing
+# Only enable PostgreSQL by default for initial testing
+
+# Global settings
+global:
+  imagePullSecrets: []
+  storageClass: ""
+  postgresql:
+    auth:
+      database: "redstone"
+      username: "redstone"
+      password: "redstone"
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: 14.9.0-debian-11-r12
+  
+  primary:
+    extendedConfiguration: |
+      shared_buffers = 128MB
+      effective_cache_size = 256MB
+      maintenance_work_mem = 64MB
+      work_mem = 4MB
+    
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: "standard"
+
+  auth:
+    postgresPassword: "redstone"
+    username: "redstone"
+    password: "redstone"
+    database: "redstone"
+
+# Disable other components by default
+redis:
+  enabled: false
+
+loki:
+  enabled: false
+
+grafana:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+# Default resource requests and limits
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# Configure probes for better reliability
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
