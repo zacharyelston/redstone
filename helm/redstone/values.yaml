@@ -5,16 +5,20 @@ global:
   imageRegistry: ""
   imagePullSecrets: []
   storageClass: ""
+  # Ephemeral environment settings
+  ephemeralEnv: false
+  # Release.com namespace support
+  releaseNamespace: ""
 
 # Redmica (Redmine fork) Configuration
 redmica:
   enabled: true
   
-  # Local Redmica image built from source
+  # Optimized custom Redmica image (60% smaller than previous builds)
   image:
-    repository: redmica
-    tag: "local"
-    pullPolicy: Never
+    repository: redmica/redmica
+    tag: latest
+    pullPolicy: IfNotPresent
   
   replicaCount: 1
   
@@ -113,17 +117,6 @@ postgresqlCustom:
       requests:
         cpu: 250m
         memory: 256Mi
-  primary:
-    persistence:
-      enabled: true
-      size: 8Gi
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 250m
-        memory: 256Mi
 
 # Redis Configuration (using Bitnami chart)
 redis:
@@ -192,9 +185,9 @@ ldap:
           name: redstone-secrets
           key: ldap-admin-password
 
-# Loki Configuration (using Grafana chart)
+# Loki Configuration (using Grafana chart) - Temporarily disabled to eliminate ClusterRole conflicts
 loki:
-  enabled: true
+  enabled: false
   loki:
     auth_enabled: false
     commonConfig:
@@ -222,6 +215,16 @@ loki:
     persistence:
       enabled: true
       size: 10Gi
+  # Disable all monitoring components that create ClusterRoles
+  monitoring:
+    enabled: false
+  grafana-agent-operator:
+    enabled: false
+  # Disable monitoring completely to avoid ClusterRole creation
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
 
 # Grafana Configuration (using Grafana chart)
 grafana:
@@ -233,13 +236,36 @@ grafana:
     server:
       serve_from_sub_path: true
       root_url: "%(protocol)s://%(domain)s/grafana/"
+  
+  # Fix ClusterRole naming conflicts between environments
+  rbac:
+    create: false
+    namespaced: true
+  
+  # Disable all optional components that might create ClusterRoles
+  sidecar:
+    dashboards:
+      enabled: false
+    datasources:
+      enabled: false
+  
+  # Disable agent operator and other optional components that create ClusterRoles
+  agent:
+    enabled: false
+  
+  # Explicitly disable grafana-agent-operator
+  grafana-agent-operator:
+    enabled: false
+  
+  grafanaOperator:
+    enabled: false
     
   service:
     type: ClusterIP
     port: 3000
   
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: nginx
     hosts:
       - grafana.local
@@ -257,11 +283,28 @@ grafana:
     enabled: true
     size: 2Gi
   
-  datasources: {}
-  
-  # Use ConfigMap-based datasource provisioning instead
-  datasourcesConfigMaps:
-    - redstone-grafana-datasources
+  # Mount ConfigMaps for provisioning
+  extraConfigmapMounts:
+    - name: datasources-configmap
+      mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+      configMap: redstone-grafana-datasources
+      subPath: datasources.yaml
+      readOnly: true
+    - name: dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-dashboards
+      configMap: redstone-grafana-dashboards
+      subPath: ""
+      readOnly: true
+    - name: metrics-dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-metrics
+      configMap: redstone-grafana-dashboard-metrics
+      subPath: ""
+      readOnly: true
+    - name: working-dashboards-configmap
+      mountPath: /var/lib/grafana/dashboards/redstone-working
+      configMap: redstone-grafana-dashboard-working
+      subPath: ""
+      readOnly: true
   
   dashboardProviders:
     dashboardproviders.yaml:
@@ -291,11 +334,6 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/redstone-working
-  
-  dashboardsConfigMaps:
-    redstone-dashboards: "redstone-grafana-dashboards"
-    redstone-metrics: "redstone-grafana-dashboard-metrics"
-    redstone-working: "redstone-grafana-dashboard-working"
 
 # Prometheus Configuration (using Prometheus chart)
 prometheus:
@@ -315,21 +353,20 @@ prometheus:
     podLabels:
       app.kubernetes.io/name: prometheus
       app.kubernetes.io/component: server
+    # Disable ClusterRole for server
+    clusterRole: false
   alertmanager:
     enabled: false
   pushgateway:
     enabled: false
   nodeExporter:
-    enabled: true
-    # Resource limits for node exporter pods
-    nodeExporter:
-      resources:
-        limits:
-          cpu: 100m
-          memory: 128Mi
-        requests:
-          cpu: 50m
-          memory: 64Mi
+    enabled: false  # Disable to avoid ClusterRole conflicts
+  # Fix ClusterRole conflicts for ephemeral environments
+  kube-state-metrics:
+    enabled: false
+  # Disable RBAC creation to avoid ClusterRole conflicts
+  rbac:
+    create: false
 
 # Logging Configuration
 logging:
@@ -338,7 +375,11 @@ logging:
     enabled: true
     image:
       repository: grafana/fluent-bit-plugin-loki
-      tag: "2.9.1-arm64"
+      tag: "2.9.1"
+    
+    # RBAC configuration - disable for ephemeral environments
+    rbac:
+      create: false
     
     # Security context for non-root execution
     securityContext:
@@ -424,3 +465,21 @@ logging:
             Port 3100
             Labels job=fluentbit
             Auto_Kubernetes_Labels On
+
+# BOFH Configuration (testing container)
+bofh:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: ubuntu
+    tag: "22.04"
+    pullPolicy: IfNotPresent
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi

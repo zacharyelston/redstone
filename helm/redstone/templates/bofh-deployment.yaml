@@ -1,0 +1,52 @@
+{{- if .Values.bofh.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "redstone.fullname" . }}-bofh
+  labels:
+    {{- include "redstone.serviceLabels" (dict "serviceName" "bofh" "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.bofh.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "bofh" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "redstone.serviceLabels" (dict "serviceName" "bofh" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: bofh
+          image: "{{ .Values.bofh.image.repository }}:{{ .Values.bofh.image.tag }}"
+          imagePullPolicy: {{ .Values.bofh.image.pullPolicy }}
+          command: ["/bin/sleep", "infinity"]
+          resources:
+            {{- toYaml .Values.bofh.resources | nindent 12 }}
+          env:
+            - name: TERM
+              value: "xterm"
+            - name: LDAP_HOST
+              value: "redstone-test-ldap"
+            - name: LDAP_PORT
+              value: "3890"
+            - name: POSTGRES_HOST
+              value: "redstone-test-postgresql-custom"
+            - name: POSTGRES_PORT
+              value: "5432"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "redstone.fullname" . }}-bofh
+  labels:
+    {{- include "redstone.serviceLabels" (dict "serviceName" "bofh" "context" .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 22
+      targetPort: 22
+      protocol: TCP
+      name: ssh
+  selector:
+    {{- include "redstone.serviceSelectorLabels" (dict "serviceName" "bofh" "context" .) | nindent 4 }}
+{{- end }}
