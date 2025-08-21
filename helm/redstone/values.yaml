@@ -14,10 +14,10 @@ global:
 redmica:
   enabled: true
   
-  # Local Redmica image built from source
+  # Official Redmine image (fallback until custom Redmica image is public)
   image:
-    repository: redmica
-    tag: "local"
+    repository: redmine
+    tag: "5.1"
     pullPolicy: IfNotPresent
   
   replicaCount: 1
