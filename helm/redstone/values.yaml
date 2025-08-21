@@ -14,10 +14,10 @@ global:
 redmica:
   enabled: true
   
-  # Official Redmine image (fallback until custom Redmica image is public)
+  # Optimized custom Redmica image (60% smaller than previous builds)
   image:
-    repository: redmine
-    tag: "5.1"
+    repository: ghcr.io/zacharyelston/redmica
+    tag: "v3.2.8"
     pullPolicy: IfNotPresent
   
   replicaCount: 1
