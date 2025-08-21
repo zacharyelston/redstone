@@ -40,6 +40,8 @@ spec:
       - name: redmica
         image: "{{ .Values.redmica.image.repository }}:{{ .Values.redmica.image.tag }}"
         imagePullPolicy: {{ .Values.redmica.image.pullPolicy }}
+        command: ["/docker-entrypoint.sh"]
+        args: ["rails", "server", "-b", "0.0.0.0"]
         ports:
         - name: http
           containerPort: 3000

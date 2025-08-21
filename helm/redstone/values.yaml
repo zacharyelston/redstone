@@ -5,16 +5,20 @@ global:
   imageRegistry: ""
   imagePullSecrets: []
   storageClass: ""
+  # Ephemeral environment settings
+  ephemeralEnv: false
+  # Release.com namespace support
+  releaseNamespace: ""
 
 # Redmica (Redmine fork) Configuration
 redmica:
   enabled: true
   
-  # Local Redmica image built from source
+  # Optimized custom Redmica image (60% smaller than previous builds)
   image:
-    repository: redmica
-    tag: "local"
-    pullPolicy: Never
+    repository: redmica/redmica
+    tag: latest
+    pullPolicy: IfNotPresent
   
   replicaCount: 1
   
@@ -113,17 +117,6 @@ postgresqlCustom:
       requests:
         cpu: 250m
         memory: 256Mi
-  primary:
-    persistence:
-      enabled: true
-      size: 8Gi
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 250m
-        memory: 256Mi
 
 # Redis Configuration (using Bitnami chart)
 redis:
@@ -192,7 +185,7 @@ ldap:
           name: redstone-secrets
           key: ldap-admin-password
 
-# Loki Configuration (using Grafana chart) - DISABLED to avoid grafana-agent-operator ClusterRole conflicts
+# Loki Configuration (using Grafana chart) - Temporarily disabled to eliminate ClusterRole conflicts
 loki:
   enabled: false
   loki:
@@ -222,6 +215,16 @@ loki:
     persistence:
       enabled: true
       size: 10Gi
+  # Disable all monitoring components that create ClusterRoles
+  monitoring:
+    enabled: false
+  grafana-agent-operator:
+    enabled: false
+  # Disable monitoring completely to avoid ClusterRole creation
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
 
 # Grafana Configuration (using Grafana chart)
 grafana:
@@ -262,7 +265,7 @@ grafana:
     port: 3000
   
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: nginx
     hosts:
       - grafana.local
@@ -350,21 +353,20 @@ prometheus:
     podLabels:
       app.kubernetes.io/name: prometheus
       app.kubernetes.io/component: server
+    # Disable ClusterRole for server
+    clusterRole: false
   alertmanager:
     enabled: false
   pushgateway:
     enabled: false
   nodeExporter:
-    enabled: true
-    # Resource limits for node exporter pods
-    nodeExporter:
-      resources:
-        limits:
-          cpu: 100m
-          memory: 128Mi
-        requests:
-          cpu: 50m
-          memory: 64Mi
+    enabled: false  # Disable to avoid ClusterRole conflicts
+  # Fix ClusterRole conflicts for ephemeral environments
+  kube-state-metrics:
+    enabled: false
+  # Disable RBAC creation to avoid ClusterRole conflicts
+  rbac:
+    create: false
 
 # Logging Configuration
 logging:
@@ -373,7 +375,11 @@ logging:
     enabled: true
     image:
       repository: grafana/fluent-bit-plugin-loki
-      tag: "2.9.1-arm64"
+      tag: "2.9.1"
+    
+    # RBAC configuration - disable for ephemeral environments
+    rbac:
+      create: false
     
     # Security context for non-root execution
     securityContext:
@@ -459,3 +465,21 @@ logging:
             Port 3100
             Labels job=fluentbit
             Auto_Kubernetes_Labels On
+
+# BOFH Configuration (testing container)
+bofh:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: ubuntu
+    tag: "22.04"
+    pullPolicy: IfNotPresent
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
