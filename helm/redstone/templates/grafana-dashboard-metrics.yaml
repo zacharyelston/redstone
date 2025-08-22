@@ -33,10 +33,7 @@ data:
       "liveNow": false,
       "panels": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
+          "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -108,10 +105,7 @@ data:
           },
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
-              },
+              "datasource": "Prometheus",
               "expr": "rate(container_cpu_usage_seconds_total{namespace=\"redstone\", container!=\"POD\", container!=\"\"}[5m]) * 100",
               "interval": "",
               "legendFormat": "{{ "{{" }}pod{{ "}}" }} - {{ "{{" }}container{{ "}}" }}",
@@ -122,10 +116,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
+          "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -197,10 +188,7 @@ data:
           },
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
-              },
+              "datasource": "Prometheus",
               "expr": "container_memory_usage_bytes{namespace=\"redstone\", container!=\"POD\", container!=\"\"}",
               "interval": "",
               "legendFormat": "{{ "{{" }}pod{{ "}}" }} - {{ "{{" }}container{{ "}}" }}",
@@ -211,10 +199,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
+          "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -284,10 +269,7 @@ data:
           "pluginVersion": "8.5.2",
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
-              },
+              "datasource": "Prometheus",
               "expr": "kube_pod_status_ready{namespace=\"redstone\"}",
               "format": "table",
               "instant": true,
@@ -320,10 +302,7 @@ data:
           "type": "table"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
+          "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -381,10 +360,7 @@ data:
           "pluginVersion": "8.5.2",
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
-              },
+              "datasource": "Prometheus",
               "expr": "kube_pod_container_status_restarts_total{namespace=\"redstone\"}",
               "format": "table",
               "instant": true,
@@ -419,10 +395,7 @@ data:
           "type": "table"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
+          "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -485,10 +458,7 @@ data:
           "pluginVersion": "8.5.2",
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
-              },
+              "datasource": "Prometheus",
               "expr": "kube_pod_status_ready{namespace=\"redstone\"}",
               "interval": "",
               "legendFormat": "{{ "{{" }}pod{{ "}}" }}",
