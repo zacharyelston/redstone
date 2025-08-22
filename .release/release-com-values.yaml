@@ -73,6 +73,17 @@ grafana:
   serviceAccount:
     create: false
     name: default
+  
+  # Enable ingress for service access in Release.com
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - host: "{{ .Values.global.domain | default \"ted6487.rls.sh\" }}"
+        paths:
+          - path: /grafana
+            pathType: Prefix
+    pathType: Prefix
 
 # Prometheus Configuration - Release.com optimized
 prometheus:
@@ -103,6 +114,17 @@ prometheus:
     enabled: false
   nodeExporter:
     enabled: false
+  
+  # Enable ingress for Prometheus access
+  server:
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hosts:
+        - host: "{{ .Values.global.domain | default \"ted6487.rls.sh\" }}"
+          paths:
+            - path: /prometheus
+              pathType: Prefix
 
 # Logging Configuration - Release.com optimized
 logging:
