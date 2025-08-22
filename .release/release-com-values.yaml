@@ -13,6 +13,10 @@ loki:
   fullnameOverride: "{{ .Release.Name }}-loki"
   nameOverride: "{{ .Release.Name }}-loki"
   
+  # Basic configuration for Release.com
+  image:
+    tag: "latest"
+  
   # Completely disable ALL ClusterRole-creating components
   monitoring:
     enabled: false
@@ -40,6 +44,18 @@ grafana:
   enabled: true
   fullnameOverride: "{{ .Release.Name }}-grafana"
   nameOverride: "{{ .Release.Name }}-grafana"
+  
+  # Basic configuration for Release.com
+  adminPassword: "admin123"
+  image:
+    tag: "latest"
+  
+  # Environment variables for Grafana
+  env:
+    PROMETHEUS_URL: "http://{{ .Release.Name }}-prometheus-server:80"
+    LOKI_URL: "http://{{ .Release.Name }}-loki:3100"
+    GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+    GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/"
   
   # Completely disable RBAC to prevent ClusterRole creation
   rbac:
