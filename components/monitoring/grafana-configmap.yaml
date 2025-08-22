@@ -21,7 +21,7 @@ data:
   LDAP_USE_SSL: "false"
   LDAP_START_TLS: "false"
   LDAP_SKIP_SSL_VERIFY: "true"
-  LDAP_BIND_DN: "cn=admin,ou=people,dc=redstone,dc=local"
+  LDAP_BIND_DN: "uid=admin,ou=people,dc=redstone,dc=local"
   LDAP_SEARCH_FILTER: "(uid=%s)"
   LDAP_SEARCH_BASE_DNS: "ou=people,dc=redstone,dc=local"
 ---

@@ -187,7 +187,7 @@ ldap:
 
 # Loki Configuration (using Grafana chart)
 loki:
-  enabled: true
+  enabled: false
   fullnameOverride: "redstone-loki"
   nameOverride: "redstone-loki"
   image:
@@ -219,16 +219,26 @@ loki:
     persistence:
       enabled: true
       size: 10Gi
-  # Disable all monitoring components that create ClusterRoles
   monitoring:
     enabled: false
   grafana-agent-operator:
     enabled: false
-  # Disable monitoring completely to avoid ClusterRole creation
   serviceMonitor:
     enabled: false
   prometheusRule:
     enabled: false
+  rbac:
+    create: false
+  grafanaAgent:
+    enabled: false
+  agent:
+    enabled: false
+  
+  # Explicitly disable the grafana-agent-operator subchart
+  grafana-agent-operator:
+    enabled: false
+    rbac:
+      create: false
 
 # Grafana Configuration (using Grafana chart)
 grafana:
@@ -237,22 +247,9 @@ grafana:
   image:
     tag: "12.1.1"
   
-  # Environment variables for multi-environment support
-  env:
-    PROMETHEUS_URL: "http://redstone-prometheus-server:80"
-    LOKI_URL: "http://redstone-loki:3100"
-    LDAP_HOST: "redstone-ldap"
-    LDAP_PORT: "3890"
-    LDAP_USE_SSL: "false"
-    LDAP_START_TLS: "false"
-    LDAP_SKIP_SSL_VERIFY: "true"
-    LDAP_BIND_DN: "uid=admin,ou=people,dc=redstone,dc=local"
-    LDAP_SEARCH_FILTER: "(uid=%s)"
-    LDAP_SEARCH_BASE_DNS: "ou=people,dc=redstone,dc=local"
-    LDAP_BASE_DN: "dc=redstone,dc=local"
-  
-  # Environment variables from secrets
-  envFromSecret: "grafana-secrets"
+  # Environment variables from ConfigMap and Secrets
+  envFromConfigMap: grafana-env-config
+  envFromSecret: grafana-secrets
   
   # Disable subpath for local development to fix session issues
   grafana.ini:
@@ -263,27 +260,30 @@ grafana:
       enabled: true
       config_file: "/etc/grafana/ldap.toml"
   
-  # Fix ClusterRole naming conflicts between environments
+  # Completely disable RBAC to prevent ClusterRole creation
   rbac:
     create: false
     namespaced: true
   
-  # Disable all optional components that might create ClusterRoles
+  # Disable all sidecar components (they can create ClusterRoles)
   sidecar:
     dashboards:
       enabled: false
     datasources:
       enabled: false
+    alerts:
+      enabled: false
+    notifiers:
+      enabled: false
   
-  # Disable agent operator and other optional components that create ClusterRoles
+  # Disable ALL agent-related components that create ClusterRoles
   agent:
     enabled: false
-  
-  # Explicitly disable grafana-agent-operator
   grafana-agent-operator:
     enabled: false
-  
   grafanaOperator:
+    enabled: false
+  grafanaAgent:
     enabled: false
     
   service:
@@ -312,54 +312,35 @@ grafana:
   # Mount ConfigMaps for provisioning
   extraConfigmapMounts:
     - name: datasources-configmap
-      mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+      mountPath: /etc/grafana/provisioning/datasources/datasources.yml
       configMap: redstone-grafana-datasources
-      subPath: datasources.yaml
+      subPath: datasources.yml
       readOnly: true
     - name: dashboards-configmap
-      mountPath: /var/lib/grafana/dashboards/redstone-dashboards
+      mountPath: /etc/grafana/dashboards
       configMap: redstone-grafana-dashboards
       subPath: ""
       readOnly: true
-    - name: metrics-dashboards-configmap
-      mountPath: /var/lib/grafana/dashboards/redstone-metrics
-      configMap: redstone-grafana-dashboard-metrics
-      subPath: ""
-      readOnly: true
-    - name: working-dashboards-configmap
-      mountPath: /var/lib/grafana/dashboards/redstone-working
-      configMap: redstone-grafana-dashboard-working
-      subPath: ""
+    - name: ldap-config
+      mountPath: /etc/grafana/ldap.toml
+      configMap: redstone-grafana-ldap-config
+      subPath: ldap.toml
       readOnly: true
   
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
       providers:
-        - name: 'redstone-dashboards'
+        - name: 'Redstone Dashboards'
           orgId: 1
           folder: 'Redstone'
           type: file
           disableDeletion: false
           editable: true
+          updateIntervalSeconds: 10
+          allowUiUpdates: true
           options:
-            path: /var/lib/grafana/dashboards/redstone-dashboards
-        - name: 'redstone-metrics'
-          orgId: 1
-          folder: 'Redstone'
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/redstone-metrics
-        - name: 'redstone-working'
-          orgId: 1
-          folder: 'Redstone'
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/redstone-working
+            path: /etc/grafana/dashboards
 
 # Prometheus Configuration (using Prometheus chart)
 prometheus:
@@ -420,12 +401,24 @@ prometheus:
     enabled: true
     image:
       tag: "v1.8.2"
-  # Fix ClusterRole conflicts for ephemeral environments
+  # Completely disable all ClusterRole-creating components for ephemeral environments
   kube-state-metrics:
     enabled: false
-  # Disable RBAC creation to avoid ClusterRole conflicts
+  
+  # Disable ALL RBAC creation to avoid ClusterRole conflicts
   rbac:
     create: false
+  
+  # Disable server RBAC as well
+  server:
+    rbac:
+      create: false
+  
+  # Disable any monitoring components
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
 
 # Logging Configuration
 logging:

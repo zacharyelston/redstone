@@ -1,0 +1,116 @@
+# Release.com specific Helm values override
+# This file contains configurations specifically for ephemeral environments
+# that prevent ClusterRole conflicts between multiple deployments
+
+# Override global settings for Release.com ephemeral environments
+global:
+  # Use release name as prefix to avoid conflicts
+  namePrefix: "{{ .Release.Name }}-"
+
+# Loki Configuration - Release.com optimized
+loki:
+  enabled: true
+  fullnameOverride: "{{ .Release.Name }}-loki"
+  nameOverride: "{{ .Release.Name }}-loki"
+  
+  # Completely disable ALL ClusterRole-creating components
+  monitoring:
+    enabled: false
+  grafana-agent-operator:
+    enabled: false
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+  rbac:
+    create: false
+  grafanaAgent:
+    enabled: false
+  agent:
+    enabled: false
+  
+  # Disable any other potential ClusterRole creators
+  grafana-agent:
+    enabled: false
+  promtail:
+    enabled: false
+
+# Grafana Configuration - Release.com optimized  
+grafana:
+  enabled: true
+  fullnameOverride: "{{ .Release.Name }}-grafana"
+  nameOverride: "{{ .Release.Name }}-grafana"
+  
+  # Completely disable RBAC to prevent ClusterRole creation
+  rbac:
+    create: false
+    namespaced: false
+  
+  # Disable ALL sidecar components
+  sidecar:
+    dashboards:
+      enabled: false
+    datasources:
+      enabled: false
+    alerts:
+      enabled: false
+    notifiers:
+      enabled: false
+    plugins:
+      enabled: false
+  
+  # Disable ALL agent-related components
+  agent:
+    enabled: false
+  grafana-agent-operator:
+    enabled: false
+  grafanaOperator:
+    enabled: false
+  grafanaAgent:
+    enabled: false
+  
+  # Disable service account creation if it causes issues
+  serviceAccount:
+    create: false
+    name: default
+
+# Prometheus Configuration - Release.com optimized
+prometheus:
+  enabled: true
+  fullnameOverride: "{{ .Release.Name }}-prometheus"
+  nameOverride: "{{ .Release.Name }}-prometheus"
+  
+  # Disable ALL ClusterRole-creating components
+  kube-state-metrics:
+    enabled: false
+  rbac:
+    create: false
+  server:
+    rbac:
+      create: false
+    clusterRole: false
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+  
+  # Disable alertmanager to reduce complexity
+  alertmanager:
+    enabled: false
+  
+  # Keep only essential components
+  pushgateway:
+    enabled: false
+  nodeExporter:
+    enabled: false
+
+# Logging Configuration - Release.com optimized
+logging:
+  fluentBit:
+    enabled: true
+    # Disable RBAC completely
+    rbac:
+      create: false
+    serviceAccount:
+      create: false
+      name: default
