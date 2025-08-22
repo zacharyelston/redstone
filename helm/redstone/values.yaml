@@ -237,11 +237,31 @@ grafana:
   image:
     tag: "12.1.1"
   
+  # Environment variables for multi-environment support
+  env:
+    PROMETHEUS_URL: "http://redstone-prometheus-server:80"
+    LOKI_URL: "http://redstone-loki:3100"
+    LDAP_HOST: "redstone-ldap"
+    LDAP_PORT: "3890"
+    LDAP_USE_SSL: "false"
+    LDAP_START_TLS: "false"
+    LDAP_SKIP_SSL_VERIFY: "true"
+    LDAP_BIND_DN: "uid=admin,ou=people,dc=redstone,dc=local"
+    LDAP_SEARCH_FILTER: "(uid=%s)"
+    LDAP_SEARCH_BASE_DNS: "ou=people,dc=redstone,dc=local"
+    LDAP_BASE_DN: "dc=redstone,dc=local"
+  
+  # Environment variables from secrets
+  envFromSecret: "grafana-secrets"
+  
   # Disable subpath for local development to fix session issues
   grafana.ini:
     server:
       serve_from_sub_path: false
       root_url: "%(protocol)s://%(domain)s/"
+    auth.ldap:
+      enabled: true
+      config_file: "/etc/grafana/ldap.toml"
   
   # Fix ClusterRole naming conflicts between environments
   rbac:

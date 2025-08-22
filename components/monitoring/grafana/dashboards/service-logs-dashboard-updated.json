@@ -25,7 +25,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Shows the total log lines per service over time",
       "fieldConfig": {
@@ -101,7 +101,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "code",
           "expr": "sum by(service) (count_over_time({} [5m]))",
@@ -115,7 +115,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Shows the total log volume per service as a pie chart",
       "fieldConfig": {
@@ -169,7 +169,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "code",
           "expr": "sum by(service) (count_over_time({} [1h]))",
@@ -183,7 +183,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Shows a table of the most recent logs from all services",
       "fieldConfig": {
@@ -266,7 +266,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "code",
           "expr": "{} | line_format \"{{.}}\"",
@@ -291,7 +291,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Shows the log lines per service over the last hour with a bar graph",
       "fieldConfig": {
@@ -365,7 +365,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "code",
           "expr": "sum by(service) (count_over_time({} [1h]))",

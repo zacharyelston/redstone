@@ -31,7 +31,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -107,7 +107,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "prometheus"
           },
           "expr": "rate(prometheus_http_requests_total[5m])",
           "refId": "A"
@@ -117,7 +117,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "gridPos": {
         "h": 8,
@@ -140,7 +140,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "expr": "{job=\"fluentbit\"}",
           "queryType": "range",
@@ -153,7 +153,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "",
       "fieldConfig": {
@@ -229,7 +229,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "expr": "sum(count_over_time({job=\"fluentbit\"}[1m]))",
           "queryType": "range",
@@ -240,7 +240,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "gridPos": {
         "h": 8,
@@ -263,7 +263,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "expr": "{job=\"fluentbit\"} |= \"error\" or {job=\"fluentbit\"} |= \"ERROR\" or {job=\"fluentbit\"} |= \"Error\"",
           "queryType": "range",
@@ -277,7 +277,10 @@
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["system", "monitoring"],
+  "tags": [
+    "system",
+    "monitoring"
+  ],
   "templating": {
     "list": []
   },
