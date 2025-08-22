@@ -34,10 +34,7 @@ data:
       "liveNow": false,
       "panels": [
         {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
+          "datasource": "Loki",
           "description": "Shows the total log lines per service over time - Stacked Histogram",
           "fieldConfig": {
             "defaults": {
@@ -108,15 +105,12 @@ data:
             },
             "tooltip": {
               "mode": "single",
-              "sort": "none"
+              "sort": "descending"
             }
           },
           "targets": [
             {
-              "datasource": {
-                "type": "loki",
-                "uid": "P8E80F9AEF21F6940"
-              },
+              "datasource": "Loki",
               "expr": "sum by(app_kubernetes_io_name) (count_over_time({job=\"fluentbit\", app_kubernetes_io_name!=\"loki\", app_kubernetes_io_name!=\"\", app_kubernetes_io_name!=\"redstone\"}[5m]))",
               "legendFormat": "{{ "{{" }}app_kubernetes_io_name{{ "}}" }}",
               "queryType": "range",
@@ -127,10 +121,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
+          "datasource": "Loki",
           "description": "All logs from Kubernetes services",
           "gridPos": {
             "h": 12,
@@ -146,15 +137,12 @@ data:
             "showCommonLabels": false,
             "showLabels": false,
             "showTime": true,
-            "sortOrder": "Descending",
+            "sortOrder": "Ascending",
             "wrapLogMessage": false
           },
           "targets": [
             {
-              "datasource": {
-                "type": "loki",
-                "uid": "P8E80F9AEF21F6940"
-              },
+              "datasource": "Loki",
               "expr": "{job=\"fluentbit\"}",
               "queryType": "range",
               "refId": "A"

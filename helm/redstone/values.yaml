@@ -185,9 +185,13 @@ ldap:
           name: redstone-secrets
           key: ldap-admin-password
 
-# Loki Configuration (using Grafana chart) - Temporarily disabled to eliminate ClusterRole conflicts
+# Loki Configuration (using Grafana chart)
 loki:
-  enabled: false
+  enabled: true
+  fullnameOverride: "redstone-loki"
+  nameOverride: "redstone-loki"
+  image:
+    tag: "3.5.3"
   loki:
     auth_enabled: false
     commonConfig:
@@ -230,12 +234,14 @@ loki:
 grafana:
   enabled: true
   adminPassword: "admin123"
+  image:
+    tag: "12.1.1"
   
-  # Fix subpath configuration for Release.com deployment
+  # Disable subpath for local development to fix session issues
   grafana.ini:
     server:
-      serve_from_sub_path: true
-      root_url: "%(protocol)s://%(domain)s/grafana/"
+      serve_from_sub_path: false
+      root_url: "%(protocol)s://%(domain)s/"
   
   # Fix ClusterRole naming conflicts between environments
   rbac:
@@ -339,6 +345,8 @@ grafana:
 prometheus:
   enabled: true
   server:
+    image:
+      tag: "v3.5.0"
     persistentVolume:
       enabled: true
       size: 8Gi
@@ -385,9 +393,13 @@ prometheus:
   alertmanager:
     enabled: false
   pushgateway:
-    enabled: false
+    enabled: true
+    image:
+      tag: "v1.9.0"
   nodeExporter:
-    enabled: false  # Disable to avoid ClusterRole conflicts
+    enabled: true
+    image:
+      tag: "v1.8.2"
   # Fix ClusterRole conflicts for ephemeral environments
   kube-state-metrics:
     enabled: false
@@ -402,7 +414,7 @@ logging:
     enabled: true
     image:
       repository: grafana/fluent-bit-plugin-loki
-      tag: "2.9.1"
+      tag: "3.1.4"
     
     # RBAC configuration - disable for ephemeral environments
     rbac:
