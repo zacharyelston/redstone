@@ -5,6 +5,13 @@ domain: rls.sh
 repo_name: zacharyelston/redstone
 tracking_branch: main
 
+# Custom hostnames for services
+hostnames:
+  grafana: grafana-${env_id}.${domain}
+  prometheus: prometheus-${env_id}.${domain}
+  loki: loki-${env_id}.${domain}
+  redmica: redmica-${env_id}.${domain}
+
 environment_templates:
   - name: production
   - name: staging
