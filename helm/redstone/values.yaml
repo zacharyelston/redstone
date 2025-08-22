@@ -191,7 +191,7 @@ loki:
   fullnameOverride: "redstone-loki"
   nameOverride: "redstone-loki"
   image:
-    tag: "3.5.3"
+    tag: "latest"
   loki:
     auth_enabled: false
     commonConfig:
@@ -245,7 +245,7 @@ grafana:
   enabled: true
   adminPassword: "admin123"
   image:
-    tag: "12.1.1"
+    tag: "latest"
   
   # Environment variables from ConfigMap and Secrets
   envFromConfigMap: grafana-env-config
@@ -347,7 +347,7 @@ prometheus:
   enabled: true
   server:
     image:
-      tag: "v3.5.0"
+      tag: "latest"
     persistentVolume:
       enabled: true
       size: 8Gi
@@ -396,11 +396,11 @@ prometheus:
   pushgateway:
     enabled: true
     image:
-      tag: "v1.9.0"
+      tag: "latest"
   nodeExporter:
     enabled: true
     image:
-      tag: "v1.8.2"
+      tag: "latest"
   # Completely disable all ClusterRole-creating components for ephemeral environments
   kube-state-metrics:
     enabled: false
@@ -427,7 +427,7 @@ logging:
     enabled: true
     image:
       repository: grafana/fluent-bit-plugin-loki
-      tag: "3.1.4"
+      tag: "latest"
     
     # RBAC configuration - disable for ephemeral environments
     rbac:
