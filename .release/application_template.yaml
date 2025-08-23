@@ -2,7 +2,7 @@
 execution_type: server
 context: release-customer-us-west-2
 domain: rls.sh
-repo_name: zacharyelston/redstone
+repo_name: "orryx"
 tracking_branch: main
 
 environment_templates:
@@ -20,7 +20,7 @@ resources:
 
 charts:
   - directory: helm/redstone
-    name: myapp
+    name: orryx
     values: values.yaml
 
 workflows:
@@ -28,12 +28,12 @@ workflows:
     parallelize:
       - step: charts
         tasks:
-          - charts.myapp
+          - charts.orryx
   - name: patch
     parallelize:
       - step: charts
         tasks:
-          - charts.myapp
+          - charts.orryx
   - name: teardown
     parallelize:
       - step: remove-environment

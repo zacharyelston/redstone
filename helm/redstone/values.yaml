@@ -407,6 +407,10 @@ prometheus:
   rbac:
     create: false
 
+# Disable kube-state-metrics to avoid ClusterRole conflicts in ephemeral environments
+kube-state-metrics:
+  enabled: false
+
 # Logging Configuration
 logging:
   # Enable Fluent Bit for log collection

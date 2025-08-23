@@ -19,7 +19,7 @@ build:
 # Deployment strategy
 deployment:
   strategy: helm
-  namespace: myapp
+  namespace: orryx
   createNamespace: true
 
 # Static Environment Configuration with Git Tag-Based Deployments
@@ -82,7 +82,7 @@ environments:
           ingress:
             enabled: true
             hosts:
-              - host: dev-grafana.redstone.example.com
+              - host: dev-grafana.orryx.example.com
                 paths:
                   - path: /
                     pathType: Prefix
@@ -93,8 +93,8 @@ environments:
           fluentBit:
             enabled: true
     domains:
-      - dev.redstone.example.com
-      - dev-grafana.redstone.example.com
+      - dev.orryx.example.com
+      - dev-grafana.orryx.example.com
 
   # Staging - deploys from release candidate tags (v*-rc.*)
   staging:
@@ -154,7 +154,7 @@ environments:
           ingress:
             enabled: true
             hosts:
-              - host: staging-grafana.redstone.example.com
+              - host: staging-grafana.orryx.example.com
                 paths:
                   - path: /
                     pathType: Prefix
@@ -165,8 +165,8 @@ environments:
           fluentBit:
             enabled: true
     domains:
-      - staging.redstone.example.com
-      - staging-grafana.redstone.example.com
+      - staging.orryx.example.com
+      - staging-grafana.orryx.example.com
 
   # Production - deploys from stable release tags (v* excluding -rc)
   production:
@@ -227,7 +227,7 @@ environments:
           ingress:
             enabled: true
             hosts:
-              - host: grafana.redstone.example.com
+              - host: grafana.orryx.example.com
                 paths:
                   - path: /
                     pathType: Prefix
@@ -238,8 +238,8 @@ environments:
           fluentBit:
             enabled: true
     domains:
-      - redstone.example.com
-      - grafana.redstone.example.com
+      - orryx.example.com
+      - grafana.orryx.example.com
 
 # Health check configuration for Helm deployments
 healthChecks:
@@ -283,9 +283,9 @@ persistence:
 # Custom domain configuration
 domains:
   production:
-    - domain: redstone.example.com
+    - domain: orryx.example.com
       service: redmica
-    - domain: grafana.redstone.example.com
+    - domain: grafana.orryx.example.com
       service: grafana
-    - domain: prometheus.redstone.example.com
+    - domain: prometheus.orryx.example.com
       service: prometheus
