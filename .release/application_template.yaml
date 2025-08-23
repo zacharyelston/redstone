@@ -26,20 +26,22 @@ resources:
 
 charts:
   - directory: helm/redstone
-    name: myapp
-    values: values.yaml
+    name: orryx
+    values:
+      - values.yaml
+      - .release/release-com-values.yaml
 
 workflows:
   - name: setup
     parallelize:
       - step: charts
         tasks:
-          - charts.myapp
+          - charts.orryx
   - name: patch
     parallelize:
       - step: charts
         tasks:
-          - charts.myapp
+          - charts.orryx
   - name: teardown
     parallelize:
       - step: remove-environment
