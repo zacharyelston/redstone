@@ -4,14 +4,14 @@
 
 # Override global settings for Release.com ephemeral environments
 global:
-  # Use release name as prefix to avoid conflicts
-  namePrefix: "{{ .Release.Name }}-"
+  # Disable name prefix for clean service names
+  namePrefix: ""
 
 # Loki Configuration - Release.com optimized
 loki:
   enabled: true
-  fullnameOverride: "{{ .Release.Name }}-loki"
-  nameOverride: "{{ .Release.Name }}-loki"
+  fullnameOverride: "loki"
+  nameOverride: "loki"
   
   # Basic configuration for Release.com
   image:
@@ -47,8 +47,8 @@ loki:
 # Grafana Configuration - Release.com optimized  
 grafana:
   enabled: true
-  fullnameOverride: "{{ .Release.Name }}-grafana"
-  nameOverride: "{{ .Release.Name }}-grafana"
+  fullnameOverride: "grafana"
+  nameOverride: "grafana"
   
   # Basic configuration for Release.com
   adminPassword: "admin123"
@@ -57,8 +57,8 @@ grafana:
   
   # Environment variables for Grafana
   env:
-    PROMETHEUS_URL: "http://{{ .Release.Name }}-prometheus-server:80"
-    LOKI_URL: "http://{{ .Release.Name }}-loki:3100"
+    PROMETHEUS_URL: "http://prometheus:80"
+    LOKI_URL: "http://loki:3100"
     GF_SERVER_SERVE_FROM_SUB_PATH: "false"
     GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/"
   
@@ -77,12 +77,12 @@ grafana:
       datasources:
       - name: Prometheus
         type: prometheus
-        url: "http://{{ .Release.Name }}-prometheus-server:80"
+        url: "http://prometheus:80"
         access: proxy
         isDefault: true
       - name: Loki
         type: loki
-        url: "http://{{ .Release.Name }}-loki:3100"
+        url: "http://loki:3100"
         access: proxy
   
   # Completely disable RBAC to prevent ClusterRole creation
@@ -127,8 +127,8 @@ grafana:
 # Prometheus Configuration - Release.com optimized
 prometheus:
   enabled: true
-  fullnameOverride: "{{ .Release.Name }}-prometheus"
-  nameOverride: "{{ .Release.Name }}-prometheus"
+  fullnameOverride: "prometheus"
+  nameOverride: "prometheus"
   
   # Disable ALL ClusterRole-creating components
   kube-state-metrics:
@@ -163,16 +163,32 @@ prometheus:
 # Redmica Configuration - Release.com optimized
 redmica:
   enabled: true
+  fullnameOverride: "redmica"
+  nameOverride: "redmica"
   service:
     type: ClusterIP
     port: 3000
+  env:
+    - name: REDMINE_DB_HOST
+      value: "postgres"
 
 # LDAP Configuration - Release.com optimized  
 ldap:
   enabled: true
+  fullnameOverride: "ldap"
+  nameOverride: "ldap"
   service:
     type: ClusterIP
     port: 389
+
+# PostgreSQL Custom Configuration - Release.com optimized
+postgresqlCustom:
+  enabled: true
+  fullnameOverride: "postgres"
+  nameOverride: "postgres"
+  service:
+    type: ClusterIP
+    port: 5432
 
 # Logging Configuration - Release.com optimized
 logging:
