@@ -1,0 +1,202 @@
+# Release.com specific Helm values override
+# This file contains configurations specifically for ephemeral environments
+# that prevent ClusterRole conflicts between multiple deployments
+
+# Override global settings for Release.com ephemeral environments
+global:
+  # Disable name prefix for clean service names
+  namePrefix: ""
+
+# Loki Configuration - Release.com optimized
+loki:
+  enabled: true
+  fullnameOverride: "loki"
+  nameOverride: "loki"
+  
+  # Basic configuration for Release.com
+  image:
+    tag: "latest"
+  
+  # Completely disable ALL ClusterRole-creating components
+  monitoring:
+    enabled: false
+  grafana-agent-operator:
+    enabled: false
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+  rbac:
+    create: false
+  grafanaAgent:
+    enabled: false
+  agent:
+    enabled: false
+  
+  # Disable any other potential ClusterRole creators
+  grafana-agent:
+    enabled: false
+  promtail:
+    enabled: false
+  
+  # Keep Loki as internal cluster service only
+  service:
+    type: ClusterIP
+    port: 3100
+
+# Grafana Configuration - Release.com optimized  
+grafana:
+  enabled: true
+  fullnameOverride: "grafana"
+  nameOverride: "grafana"
+  
+  # Basic configuration for Release.com
+  adminPassword: "admin123"
+  image:
+    tag: "latest"
+  
+  # Environment variables for Grafana
+  env:
+    PROMETHEUS_URL: "http://prometheus:80"
+    LOKI_URL: "http://loki:3100"
+    GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+    GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/"
+  
+  # Disable ConfigMap volume mounts that don't exist in Release.com
+  extraConfigmapMounts: []
+  extraSecretMounts: []
+  
+  # Disable LDAP configuration
+  ldap:
+    enabled: false
+  
+  # Use simple datasource configuration
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        url: "http://prometheus:80"
+        access: proxy
+        isDefault: true
+      - name: Loki
+        type: loki
+        url: "http://loki:3100"
+        access: proxy
+  
+  # Completely disable RBAC to prevent ClusterRole creation
+  rbac:
+    create: false
+    namespaced: false
+  
+  # Disable ALL sidecar components
+  sidecar:
+    dashboards:
+      enabled: false
+    datasources:
+      enabled: false
+    alerts:
+      enabled: false
+    notifiers:
+      enabled: false
+    plugins:
+      enabled: false
+  
+  # Disable ALL agent-related components
+  agent:
+    enabled: false
+  grafana-agent-operator:
+    enabled: false
+  grafanaOperator:
+    enabled: false
+  grafanaAgent:
+    enabled: false
+  
+  # Disable service account creation if it causes issues
+  serviceAccount:
+    create: false
+    name: default
+  
+  # Service exposure for Release.com
+  service:
+    type: ClusterIP
+    port: 3000
+  
+
+# Prometheus Configuration - Release.com optimized
+prometheus:
+  enabled: true
+  fullnameOverride: "prometheus"
+  nameOverride: "prometheus"
+  
+  # Disable ALL ClusterRole-creating components
+  kube-state-metrics:
+    enabled: false
+  rbac:
+    create: false
+  server:
+    rbac:
+      create: false
+    clusterRole: false
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+  
+  # Disable alertmanager to reduce complexity
+  alertmanager:
+    enabled: false
+  
+  # Keep only essential components
+  pushgateway:
+    enabled: false
+  nodeExporter:
+    enabled: false
+  
+  # Keep Prometheus as internal cluster service only
+  server:
+    service:
+      type: ClusterIP
+      servicePort: 80
+
+# Redmica Configuration - Release.com optimized
+redmica:
+  enabled: true
+  fullnameOverride: "redmica"
+  nameOverride: "redmica"
+  service:
+    type: ClusterIP
+    port: 3000
+  env:
+    - name: REDMINE_DB_HOST
+      value: "postgres"
+
+# LDAP Configuration - Release.com optimized  
+ldap:
+  enabled: true
+  fullnameOverride: "ldap"
+  nameOverride: "ldap"
+  service:
+    type: ClusterIP
+    port: 389
+
+# PostgreSQL Custom Configuration - Release.com optimized
+postgresqlCustom:
+  enabled: true
+  fullnameOverride: "postgres"
+  nameOverride: "postgres"
+  service:
+    type: ClusterIP
+    port: 5432
+
+# Logging Configuration - Release.com optimized
+logging:
+  fluentBit:
+    enabled: true
+    # Disable RBAC completely
+    rbac:
+      create: false
+    serviceAccount:
+      create: false
+      name: default

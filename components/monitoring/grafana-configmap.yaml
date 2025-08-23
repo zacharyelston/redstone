@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-env-config
+  namespace: redstone
+  labels:
+    app: grafana
+    component: monitoring
+data:
+  # Datasource URLs for Kubernetes environment
+  PROMETHEUS_URL: "http://redstone-prometheus-server:80"
+  LOKI_URL: "http://redstone-loki:3100"
+  
+  # Grafana Configuration
+  GRAFANA_ADMIN_USER: "admin"
+  
+  # LDAP Configuration
+  LDAP_ENABLED: "true"
+  LDAP_HOST: "redstone-ldap"
+  LDAP_PORT: "3890"
+  LDAP_USE_SSL: "false"
+  LDAP_START_TLS: "false"
+  LDAP_SKIP_SSL_VERIFY: "true"
+  LDAP_BIND_DN: "uid=admin,ou=people,dc=redstone,dc=local"
+  LDAP_SEARCH_FILTER: "(uid=%s)"
+  LDAP_SEARCH_BASE_DNS: "ou=people,dc=redstone,dc=local"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-secrets
+  namespace: redstone
+  labels:
+    app: grafana
+    component: monitoring
+type: Opaque
+stringData:
+  # Sensitive configuration data
+  GRAFANA_ADMIN_PASSWORD: "admin123"
+  LDAP_BIND_PASSWORD: "admin"

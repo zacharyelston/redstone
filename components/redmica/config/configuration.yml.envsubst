@@ -1,0 +1,42 @@
+# Redmica Configuration with envsubst
+# Use standard envsubst for environment variable substitution
+
+production:
+  database:
+    adapter: postgresql
+    database: ${DATABASE_NAME}
+    host: ${DATABASE_HOST}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    encoding: utf8
+    pool: ${DATABASE_POOL:-5}
+
+  email_delivery:
+    delivery_method: :smtp
+    smtp_settings:
+      address: ${SMTP_HOST}
+      port: ${SMTP_PORT:-587}
+      domain: ${SMTP_DOMAIN}
+      user_name: ${SMTP_USER}
+      password: ${SMTP_PASSWORD}
+      authentication: ${SMTP_AUTH:-plain}
+      enable_starttls_auto: ${SMTP_STARTTLS:-true}
+
+  default_language: ${DEFAULT_LANGUAGE:-en}
+  
+  # LDAP configuration
+  ldap:
+    enabled: ${LDAP_ENABLED:-false}
+    host: ${LDAP_HOST}
+    port: ${LDAP_PORT:-389}
+    account: ${LDAP_ACCOUNT}
+    password: ${LDAP_PASSWORD}
+    base_dn: ${LDAP_BASE_DN}
+    attr_login: ${LDAP_ATTR_LOGIN:-uid}
+    attr_firstname: ${LDAP_ATTR_FIRSTNAME:-givenName}
+    attr_lastname: ${LDAP_ATTR_LASTNAME:-sn}
+    attr_mail: ${LDAP_ATTR_MAIL:-mail}
+    onthefly_register: ${LDAP_ONTHEFLY_REGISTER:-true}
+
+  attachments_storage_path: ${ATTACHMENTS_PATH:-files}
+  rest_api_enabled: ${REST_API_ENABLED:-true}

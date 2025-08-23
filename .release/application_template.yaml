@@ -5,6 +5,13 @@ domain: rls.sh
 repo_name: zacharyelston/redstone
 tracking_branch: main
 
+# Custom hostnames for services - Release.com pattern
+hostnames:
+- grafana: grafana-${RELEASE_APP_NAME}-${RELEASE_ENV_ID}-${RELEASE_RANDOMNESS}.${RELEASE_DOMAIN}
+- redmica: redmica-${RELEASE_APP_NAME}-${RELEASE_ENV_ID}-${RELEASE_RANDOMNESS}.${RELEASE_DOMAIN}
+- ldap: ldap-${RELEASE_APP_NAME}-${RELEASE_ENV_ID}-${RELEASE_RANDOMNESS}.${RELEASE_DOMAIN}
+- postgres: postgres-${RELEASE_APP_NAME}-${RELEASE_ENV_ID}-${RELEASE_RANDOMNESS}.${RELEASE_DOMAIN}
+
 environment_templates:
   - name: production
   - name: staging
@@ -20,20 +27,22 @@ resources:
 
 charts:
   - directory: helm/redstone
-    name: myapp
-    values: values.yaml
+    name: redstone
+    values:
+      - values.yaml
+      - .release/release-com-values.yaml
 
 workflows:
   - name: setup
     parallelize:
       - step: charts
         tasks:
-          - charts.myapp
+          - charts.redstone
   - name: patch
     parallelize:
       - step: charts
         tasks:
-          - charts.myapp
+          - charts.redstone
   - name: teardown
     parallelize:
       - step: remove-environment

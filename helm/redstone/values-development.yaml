@@ -1,0 +1,55 @@
+# Development Environment Values Override
+# This file keeps 'latest' tags for development flexibility
+# Use with: helm install -f values.yaml -f values-development.yaml
+
+# Development environments use 'latest' for all images
+# This allows developers to test with newest features and fixes
+
+# Redmica - Latest for development
+redmica:
+  image:
+    tag: "latest"
+
+# Redis - Latest for development
+redis:
+  image:
+    tag: "latest"
+
+# LDAP - Latest for development
+ldap:
+  image:
+    tag: "latest"
+
+# Loki - Latest for development (when enabled)
+loki:
+  image:
+    tag: "latest"
+
+# Grafana - Latest for development
+grafana:
+  image:
+    tag: "latest"
+
+# Prometheus - Latest versions for development
+prometheus:
+  server:
+    image:
+      tag: "latest"
+  pushgateway:
+    image:
+      tag: "latest"
+  nodeExporter:
+    image:
+      tag: "latest"
+
+# Logging - Latest for development
+logging:
+  fluentBit:
+    image:
+      repository: grafana/fluent-bit-plugin-loki
+      tag: "latest"
+
+# Init containers - Latest for development
+initContainers:
+  image:
+    tag: "latest"

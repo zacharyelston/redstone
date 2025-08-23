@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redstone-grafana-ldap-config
+  namespace: redstone
+  labels:
+    app: grafana
+    component: monitoring
+data:
+  ldap.toml: |
+    # LDAP Configuration for Grafana - Generated from template
+    verbose_logging = true
+
+    [[servers]]
+    host = "redstone-ldap"
+    port = 3890
+    use_ssl = false
+    start_tls = false
+    ssl_skip_verify = true
+    bind_dn = "uid=admin,ou=people,dc=redstone,dc=local"
+    bind_password = "admin"
+    search_filter = "(uid=%s)"
+    search_base_dns = ["ou=people,dc=redstone,dc=local"]
+
+    [servers.attributes]
+    name = "givenname"
+    surname = "sn"
+    username = "uid"
+    member_of = "objectclass"
+    email = "mail"
+    display_name = "cn"
+
+    [[servers.group_mappings]]
+    group_dn = "cn=admins,ou=groups,dc=redstone,dc=local"
+    org_role = "Admin"
+
+    [[servers.group_mappings]]
+    group_dn = "cn=developers,ou=groups,dc=redstone,dc=local"
+    org_role = "Editor"
+
+    [[servers.group_mappings]]
+    group_dn = "cn=grafana_users,ou=groups,dc=redstone,dc=local"
+    org_role = "Editor"
+
+    [[servers.group_mappings]]
+    group_dn = "cn=viewers,ou=groups,dc=redstone,dc=local"
+    org_role = "Viewer"
+
+    [[servers.group_mappings]]
+    group_dn = "*"
+    org_role = "Viewer"

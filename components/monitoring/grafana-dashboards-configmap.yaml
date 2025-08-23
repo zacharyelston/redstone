@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redstone-grafana-dashboards
+  namespace: redstone
+  labels:
+    app: grafana
+    component: monitoring
+data:
+  # Dashboard files will be mounted here
+  # This ConfigMap should be populated with actual dashboard JSON files
+  # For now, we'll include a placeholder that references the actual dashboard files
+  .keep: |
+    # This ConfigMap should contain the dashboard JSON files from:
+    # /components/monitoring/grafana/dashboards/*.json
+    # 
+    # To populate this ConfigMap with actual dashboards, run:
+    # kubectl create configmap redstone-grafana-dashboards \
+    #   --from-file=/path/to/dashboards/ \
+    #   --namespace=redstone \
+    #   --dry-run=client -o yaml | kubectl apply -f -

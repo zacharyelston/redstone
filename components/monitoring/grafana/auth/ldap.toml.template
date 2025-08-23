@@ -5,19 +5,19 @@ verbose_logging = true # Enable verbose logging for troubleshooting
 
 [[servers]]
 # LDAP server configuration using environment variables
-host = "test-ldap"
-port = 389
-use_ssl = false
-start_tls = false
-ssl_skip_verify = true
+host = "${LDAP_HOST}"
+port = ${LDAP_PORT}
+use_ssl = ${LDAP_USE_SSL}
+start_tls = ${LDAP_START_TLS}
+ssl_skip_verify = ${LDAP_SKIP_SSL_VERIFY}
 
 # Authentication configuration
-bind_dn = "uid=admin,ou=people,dc=redstone,dc=local"
-bind_password = "test-password"
+bind_dn = "${LDAP_BIND_DN}"
+bind_password = "${LDAP_BIND_PASSWORD}"
 
 # Search configuration
-search_filter = "(uid=%s)"
-search_base_dns = ["ou=people,dc=redstone,dc=local"]
+search_filter = "${LDAP_SEARCH_FILTER}"
+search_base_dns = ["${LDAP_SEARCH_BASE_DNS}"]
 
 # User mapping - match LLDAP attribute names
 [servers.attributes]
@@ -32,22 +32,22 @@ display_name = "cn"
 
 # Administrators group mapping
 [[servers.group_mappings]]
-group_dn = "cn=admins,ou=people,dc=redstone,dc=local"
+group_dn = "cn=admins,${LDAP_SEARCH_BASE_DNS}"
 org_role = "Admin"
 
 # Developers group mapping
 [[servers.group_mappings]]
-group_dn = "cn=developers,ou=groups,dc=redstone,dc=local"
+group_dn = "cn=developers,ou=groups,${LDAP_BASE_DN}"
 org_role = "Editor"
 
 # Grafana Users group mapping
 [[servers.group_mappings]]
-group_dn = "cn=grafana_users,ou=groups,dc=redstone,dc=local"
+group_dn = "cn=grafana_users,ou=groups,${LDAP_BASE_DN}"
 org_role = "Editor"
 
 # Viewers group mapping
 [[servers.group_mappings]]
-group_dn = "cn=viewers,ou=groups,dc=redstone,dc=local"
+group_dn = "cn=viewers,ou=groups,${LDAP_BASE_DN}"
 org_role = "Viewer"
 
 # Default mapping for all other groups
