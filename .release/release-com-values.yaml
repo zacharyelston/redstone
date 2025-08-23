@@ -62,6 +62,29 @@ grafana:
     GF_SERVER_SERVE_FROM_SUB_PATH: "false"
     GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/"
   
+  # Disable ConfigMap volume mounts that don't exist in Release.com
+  extraConfigmapMounts: []
+  extraSecretMounts: []
+  
+  # Disable LDAP configuration
+  ldap:
+    enabled: false
+  
+  # Use simple datasource configuration
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        url: "http://{{ .Release.Name }}-prometheus-server:80"
+        access: proxy
+        isDefault: true
+      - name: Loki
+        type: loki
+        url: "http://{{ .Release.Name }}-loki:3100"
+        access: proxy
+  
   # Completely disable RBAC to prevent ClusterRole creation
   rbac:
     create: false
