@@ -4,7 +4,7 @@
 ClusterRole conflicts occur in Release.com ephemeral environments when multiple deployments try to create the same cluster-scoped resources. The error typically looks like:
 
 ```
-Error: Unable to continue with install: ClusterRole "redstone-loki-grafana-agent" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; annotation validation error: key "meta.helm.sh/release-name" must equal "orryx": current value is "redstone"
+Error: Unable to continue with install: ClusterRole "redstone-loki-grafana-agent" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; annotation validation error: key "meta.helm.sh/release-name" must equal "redstone": current value is "previous-release"
 ```
 
 ## Root Cause
@@ -45,7 +45,7 @@ release instances list --environment <environment-id>
 kubectl get clusterroles | grep -E "(loki|grafana|prometheus)"
 
 # Check Helm releases in the cluster
-helm list --all-namespaces | grep -E "(redstone|orryx)"
+helm list --all-namespaces | grep redstone
 
 # Inspect specific release
 helm get values <release-name> -n <namespace>
