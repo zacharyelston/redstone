@@ -5,11 +5,14 @@ domain: rls.sh
 repo_name: zacharyelston/redstone
 tracking_branch: main
 
-# Custom hostnames for services - Release.com pattern
+# Custom hostnames for services - Release.com pattern (Array format)
 hostnames:
-  grafana: grafana-red1-${branch_hash}-${env_id}.${domain}
-  redmica: redmica-red1-${branch_hash}-${env_id}.${domain}
-  ldap: ldap-red1-${branch_hash}-${env_id}.${domain}
+  - service: grafana
+    hostname: grafana-red1-${branch_hash}-${env_id}.${domain}
+  - service: redmica
+    hostname: redmica-red1-${branch_hash}-${env_id}.${domain}
+  - service: ldap
+    hostname: ldap-red1-${branch_hash}-${env_id}.${domain}
 
 environment_templates:
   - name: production
