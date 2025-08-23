@@ -7,9 +7,10 @@ tracking_branch: main
 
 # Custom hostnames for services - Release.com pattern
 hostnames:
-  orryx-grafana: grafana-red1-${branch_hash}-${env_id}.${domain}
-  redmica: redmica-red1-${branch_hash}-${env_id}.${domain}
-  orryx-redstone-ldap: ldap-red1-${branch_hash}-${env_id}.${domain}
+- grafana: grafana-${env_id}.${domain}
+- redmica: redmica-${env_id}.${domain}
+- ldap: ldap-${env_id}.${domain}
+- postgres: postgres-${env_id}.${domain}
 
 environment_templates:
   - name: production
