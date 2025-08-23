@@ -100,7 +100,7 @@ grafana:
     type: ClusterIP
     port: 3000
     annotations:
-      release.com/hostname: "grafana-${env_id}.${domain}"
+      release.com/hostname: "grafana-red1-${branch_hash}-${env_id}.${domain}"
   
 
 # Prometheus Configuration - Release.com optimized
@@ -146,7 +146,7 @@ redmica:
     type: ClusterIP
     port: 3000
     annotations:
-      release.com/hostname: "redmica-${env_id}.${domain}"
+      release.com/hostname: "redmica-red1-${branch_hash}-${env_id}.${domain}"
 
 # LDAP Configuration - Release.com optimized  
 ldap:
@@ -155,7 +155,7 @@ ldap:
     type: ClusterIP
     port: 389
     annotations:
-      release.com/hostname: "ldap-${env_id}.${domain}"
+      release.com/hostname: "ldap-red1-${branch_hash}-${env_id}.${domain}"
 
 # Logging Configuration - Release.com optimized
 logging:
