@@ -38,6 +38,11 @@ loki:
     enabled: false
   promtail:
     enabled: false
+  
+  # Keep Loki as internal cluster service only
+  service:
+    type: ClusterIP
+    port: 3100
 
 # Grafana Configuration - Release.com optimized  
 grafana:
@@ -90,16 +95,13 @@ grafana:
     create: false
     name: default
   
-  # Enable ingress for service access in Release.com
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    hosts:
-      - host: "{{ .Values.global.domain | default \"ted6487.rls.sh\" }}"
-        paths:
-          - path: /grafana
-            pathType: Prefix
-    pathType: Prefix
+  # Service exposure for Release.com
+  service:
+    type: ClusterIP
+    port: 3000
+    annotations:
+      release.com/hostname: "grafana-${env_id}.${domain}"
+  
 
 # Prometheus Configuration - Release.com optimized
 prometheus:
@@ -131,16 +133,29 @@ prometheus:
   nodeExporter:
     enabled: false
   
-  # Enable ingress for Prometheus access
+  # Keep Prometheus as internal cluster service only
   server:
-    ingress:
-      enabled: true
-      ingressClassName: nginx
-      hosts:
-        - host: "{{ .Values.global.domain | default \"ted6487.rls.sh\" }}"
-          paths:
-            - path: /prometheus
-              pathType: Prefix
+    service:
+      type: ClusterIP
+      servicePort: 80
+
+# Redmica Configuration - Release.com optimized
+redmica:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 3000
+    annotations:
+      release.com/hostname: "redmica-${env_id}.${domain}"
+
+# LDAP Configuration - Release.com optimized  
+ldap:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 389
+    annotations:
+      release.com/hostname: "ldap-${env_id}.${domain}"
 
 # Logging Configuration - Release.com optimized
 logging:
