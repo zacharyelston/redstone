@@ -7,7 +7,7 @@ tracking_branch: main
 
 # Custom hostnames for services - Release.com pattern
 hostnames:
-- grafana: grafana-${env_id}.${domain}
+- grafana: grafana-${tracking_branch}${env_id}.${domain}
 - redmica: redmica-${env_id}.${domain}
 - ldap: ldap-${env_id}.${domain}
 - postgres: postgres-${env_id}.${domain}
