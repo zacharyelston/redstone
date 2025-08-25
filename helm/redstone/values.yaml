@@ -257,8 +257,7 @@ grafana:
       serve_from_sub_path: false
       root_url: "%(protocol)s://%(domain)s/"
     auth.ldap:
-      enabled: true
-      config_file: "/etc/grafana/ldap.toml"
+      enabled: false
   
   # Completely disable RBAC to prevent ClusterRole creation
   rbac:
@@ -320,11 +319,6 @@ grafana:
       mountPath: /etc/grafana/dashboards
       configMap: redstone-grafana-dashboards
       subPath: ""
-      readOnly: true
-    - name: ldap-config
-      mountPath: /etc/grafana/ldap.toml
-      configMap: redstone-grafana-ldap-config
-      subPath: ldap.toml
       readOnly: true
   
   dashboardProviders:
