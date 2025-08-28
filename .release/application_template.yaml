@@ -5,23 +5,6 @@ domain: rls.sh
 repo_name: zacharyelston/redstone
 tracking_branch: main
 
-# Hostname Configuration
-# Official Release.com supported variables:
-# - ${env_id} - Environment identifier (random for ephemeral, name for permanent)
-# - ${domain} - Domain from configuration (e.g., rls.sh)
-# - ${pr_id} - Pull Request identifier
-# - ${repo_org} - Source control repository organization
-# - ${repo_name} - Source control repository name
-#
-# NOTE: GitOps must be enabled for this application template to be automatically applied.
-# Until GitOps is enabled, this configuration must be manually pasted into the Release.com web UI.
-hostnames:
-- grafana: grafana-${pr_id}-${env_id}.${domain}
-- prometheus: prometheus-${pr_id}-${env_id}.${domain}
-- loki: loki-${pr_id}-${env_id}.${domain}
-- redmine: redmine-${pr_id}-${env_id}.${domain}
-- postgresql: postgresql-${pr_id}-${env_id}.${domain}
-- redis: redis-${pr_id}-${env_id}.${domain}
 
 environment_templates:
   - name: production
