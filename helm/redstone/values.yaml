@@ -9,10 +9,14 @@ global:
   ephemeralEnv: false
   # Release.com namespace support
   releaseNamespace: ""
+  # Disable name prefix for clean service names (Release.com optimized)
+  namePrefix: ""
 
 # Redmica (Redmine fork) Configuration
 redmica:
   enabled: true
+  fullnameOverride: "redmica"
+  nameOverride: "redmica"
   
   # Optimized custom Redmica image (60% smaller than previous builds)
   image:
@@ -83,15 +87,26 @@ redmica:
     - name: REDMINE_DB_ADAPTER
       value: "postgresql"
     - name: REDMINE_DB_HOST
-      value: "redstone-postgresql-custom"
+      value: "postgres"
     - name: REDMINE_DB_PORT
       value: "5432"
     - name: REDMINE_DB_DATABASE
       value: "redmica"
     - name: REDMINE_DB_USERNAME
-      value: "redmica"
+      valueFrom:
+        secretKeyRef:
+          name: redstone-secrets
+          key: postgres-username
     - name: REDMINE_DB_PASSWORD
-      value: "redmica123"
+      valueFrom:
+        secretKeyRef:
+          name: redstone-secrets
+          key: postgres-password
+    - name: REDMINE_SECRET_KEY_BASE
+      valueFrom:
+        secretKeyRef:
+          name: redstone-secrets
+          key: redmine-secret-key-base
 
 # PostgreSQL Configuration (using Bitnami chart)
 # Disable Bitnami PostgreSQL chart to use our custom StatefulSet
@@ -101,6 +116,8 @@ postgresql:
 # Custom PostgreSQL configuration for standard postgres:latest container
 postgresqlCustom:
   enabled: true
+  fullnameOverride: "postgres"
+  nameOverride: "postgres"
   auth:
     postgresPassword: "redstone123"
     username: "redmica"
@@ -143,6 +160,8 @@ redis:
 # LDAP Configuration
 ldap:
   enabled: true
+  fullnameOverride: "ldap"
+  nameOverride: "ldap"
   image:
     repository: lldap/lldap
     tag: "latest"
@@ -187,11 +206,35 @@ ldap:
 
 # Loki Configuration (using Grafana chart)
 loki:
-  enabled: false
-  fullnameOverride: "redstone-loki"
-  nameOverride: "redstone-loki"
+  enabled: true
+  fullnameOverride: "loki"
+  nameOverride: "loki"
+  
+  # Use Grafana's Loki chart configuration
   image:
     tag: "latest"
+  
+  # Completely disable ALL ClusterRole-creating components
+  monitoring:
+    enabled: false
+  grafana-agent-operator:
+    enabled: false
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+  rbac:
+    create: false
+  grafanaAgent:
+    enabled: false
+  agent:
+    enabled: false
+  
+  # Disable any other potential ClusterRole creators
+  grafana-agent:
+    enabled: false
+  promtail:
+    enabled: false
   loki:
     auth_enabled: false
     commonConfig:
@@ -243,6 +286,8 @@ loki:
 # Grafana Configuration (using Grafana chart)
 grafana:
   enabled: true
+  fullnameOverride: "grafana"
+  nameOverride: "grafana"
   adminPassword: "admin123"
   image:
     tag: "latest"
@@ -251,7 +296,13 @@ grafana:
   envFromConfigMap: grafana-env-config
   envFromSecret: grafana-secrets
   
-  # Disable subpath for local development to fix session issues
+  # Environment variables for Grafana
+  env:
+    PROMETHEUS_URL: "http://prometheus:80"
+    LOKI_URL: "http://loki:3100"
+    GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+    GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/"
+  
   grafana.ini:
     server:
       serve_from_sub_path: false
@@ -262,7 +313,7 @@ grafana:
   # Completely disable RBAC to prevent ClusterRole creation
   rbac:
     create: false
-    namespaced: true
+    namespaced: false
   
   # Disable all sidecar components (they can create ClusterRoles)
   sidecar:
@@ -274,8 +325,10 @@ grafana:
       enabled: false
     notifiers:
       enabled: false
+    plugins:
+      enabled: false
   
-  # Disable ALL agent-related components that create ClusterRoles
+  # Disable ALL agent-related components
   agent:
     enabled: false
   grafana-agent-operator:
@@ -284,6 +337,30 @@ grafana:
     enabled: false
   grafanaAgent:
     enabled: false
+  
+  # Disable service account creation if it causes issues
+  serviceAccount:
+    create: false
+    name: default
+  
+  # Disable ConfigMap volume mounts that don't exist in Release.com
+  extraConfigmapMounts: []
+  extraSecretMounts: []
+  
+  # Use simple datasource configuration
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        url: "http://prometheus:80"
+        access: proxy
+        isDefault: true
+      - name: Loki
+        type: loki
+        url: "http://loki:3100"
+        access: proxy
     
   service:
     type: ClusterIP
@@ -339,9 +416,37 @@ grafana:
 # Prometheus Configuration (using Prometheus chart)
 prometheus:
   enabled: true
+  fullnameOverride: "prometheus"
+  nameOverride: "prometheus"
+  
+  # Disable ALL ClusterRole-creating components
+  kube-state-metrics:
+    enabled: false
+  rbac:
+    create: false
   server:
-    image:
-      tag: "latest"
+    rbac:
+      create: false
+    clusterRole: false
+    service:
+      type: ClusterIP
+      servicePort: 80
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+  
+  # Disable alertmanager to reduce complexity
+  alertmanager:
+    enabled: false
+  
+  # Keep only essential components
+  pushgateway:
+    enabled: false
+  nodeExporter:
+    enabled: false
+  
+  server:
     persistentVolume:
       enabled: true
       size: 8Gi
