@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Grafana Dashboard and Datasource Provisioning Test Script
-# Tests and validates Grafana provisioning in Release.com deployment
+# Tests and validates Grafana provisioning in deployment
 
 set -e
 

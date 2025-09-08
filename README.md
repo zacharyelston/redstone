@@ -260,17 +260,12 @@ helm uninstall redstone -n redstone-customer-namespace
 
 ### Alternative Deployment Methods
 
-**Release.com Static Environments (Production)**
+**Git Tag-based Deployment (Production)**
 ```bash
 # Git tag-based deployment workflow
 git push origin main                    # → Auto-deploys to development
 git tag v1.2.0-rc.1 && git push origin v1.2.0-rc.1  # → Staging (manual approval)
 git tag v1.2.0 && git push origin v1.2.0            # → Production (manual approval)
-
-# Environment management
-./scripts/manage-release-environments.sh status      # Check all environments
-./scripts/manage-release-environments.sh test staging # Test specific environment
-./scripts/test-release-deployment.sh production     # Comprehensive testing
 ```
 
 **Docker Compose (Development)**

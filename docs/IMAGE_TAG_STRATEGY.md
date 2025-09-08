@@ -49,7 +49,7 @@ helm upgrade --install redstone ./helm/redstone \
   --namespace production
 ```
 
-### Release.com Ephemeral Environments
+### Ephemeral Environments
 Currently using development configuration (latest tags) for all ephemeral environments to resolve image pull issues.
 
 ## Version Update Process
