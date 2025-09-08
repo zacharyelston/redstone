@@ -7,9 +7,9 @@ global:
   storageClass: ""
   # Ephemeral environment settings
   ephemeralEnv: false
-  # Release.com namespace support
+  # Namespace support
   releaseNamespace: ""
-  # Disable name prefix for clean service names (Release.com optimized)
+  # Disable name prefix for clean service names
   namePrefix: ""
 
 # Redmica (Redmine fork) Configuration
@@ -343,7 +343,7 @@ grafana:
     create: false
     name: default
   
-  # Disable ConfigMap volume mounts that don't exist in Release.com
+  # Disable ConfigMap volume mounts
   extraConfigmapMounts: []
   extraSecretMounts: []
   
