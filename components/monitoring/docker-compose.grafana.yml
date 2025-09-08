@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  grafana:
+    image: grafana/grafana:12.1.1
+    container_name: redstone-grafana
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      # Load environment variables from .env file
+      - PROMETHEUS_URL=${PROMETHEUS_URL:-http://prometheus:9090}
+      - LOKI_URL=${LOKI_URL:-http://loki:3100}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123}
+      
+      # LDAP Configuration
+      - GF_AUTH_LDAP_ENABLED=${LDAP_ENABLED:-false}
+      - GF_AUTH_LDAP_CONFIG_FILE=/etc/grafana/ldap.toml
+      - LDAP_HOST=${LDAP_HOST:-ldap.example.com}
+      - LDAP_PORT=${LDAP_PORT:-389}
+      - LDAP_USE_SSL=${LDAP_USE_SSL:-false}
+      - LDAP_START_TLS=${LDAP_START_TLS:-false}
+      - LDAP_SKIP_SSL_VERIFY=${LDAP_SKIP_SSL_VERIFY:-false}
+      - LDAP_BIND_DN=${LDAP_BIND_DN:-cn=admin,dc=example,dc=com}
+      - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-password}
+      - LDAP_SEARCH_FILTER=${LDAP_SEARCH_FILTER:-(uid=%s)}
+      - LDAP_SEARCH_BASE_DNS=${LDAP_SEARCH_BASE_DNS:-ou=people,dc=example,dc=com}
+      
+      # Grafana Configuration
+      - GF_SERVER_ROOT_URL=http://localhost:3002
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - ./grafana/ldap.toml:/etc/grafana/ldap.toml:ro
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+      - loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  grafana-storage:
+    driver: local
+
+networks:
+  monitoring:
+    external: true

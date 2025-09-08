@@ -44,7 +44,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Overview of log sources feeding into Loki",
       "fieldConfig": {
@@ -119,7 +119,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "builder",
           "expr": "sum by (compose_service) (count_over_time({compose_service!=\"\"}[$__interval]))",
@@ -133,7 +133,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "All logs from all sources",
       "gridPos": {
@@ -157,7 +157,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "builder",
           "expr": "{}",
@@ -184,7 +184,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Logs from Redmica container",
       "gridPos": {
@@ -208,7 +208,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "builder",
           "expr": "{compose_service=\"redmica\"}",
@@ -235,7 +235,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Logs from PostgreSQL container",
       "gridPos": {
@@ -259,7 +259,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "builder",
           "expr": "{compose_service=\"postgres\"}",
@@ -286,7 +286,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Filter logs by specific keywords",
       "gridPos": {
@@ -310,7 +310,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki"
           },
           "editorMode": "builder",
           "expr": "{} |= \"${search:}\"",
@@ -325,7 +325,10 @@
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["logs", "monitoring"],
+  "tags": [
+    "logs",
+    "monitoring"
+  ],
   "templating": {
     "list": [
       {

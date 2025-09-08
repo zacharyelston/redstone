@@ -1,0 +1,52 @@
+# Production Environment Values Override
+# This file contains pinned image versions for production stability
+# Use with: helm install -f values.yaml -f values-production.yaml
+
+# Redmica - Production stable version
+redmica:
+  image:
+    tag: "5.1.0"  # Pinned to stable release
+
+# Redis - Production stable version  
+redis:
+  image:
+    tag: "7.0.15-debian-11-r7"  # Pinned to stable release
+
+# LDAP - Production stable version
+ldap:
+  image:
+    tag: "v0.5.0"  # Pinned to stable release
+
+# Loki - Production stable version (when enabled)
+loki:
+  image:
+    tag: "3.0.0"  # Pinned to stable release
+
+# Grafana - Production stable version
+grafana:
+  image:
+    tag: "10.4.0"  # Pinned to stable release
+
+# Prometheus - Production stable versions
+prometheus:
+  server:
+    image:
+      tag: "v2.51.2"  # Pinned to stable release
+  pushgateway:
+    image:
+      tag: "v1.8.0"  # Pinned to stable release
+  nodeExporter:
+    image:
+      tag: "v1.7.0"  # Pinned to stable release
+
+# Logging - Production stable version
+logging:
+  fluentBit:
+    image:
+      repository: fluent/fluent-bit
+      tag: "3.0.7"  # Use official fluent-bit image with pinned version
+
+# Init containers - Production stable version
+initContainers:
+  image:
+    tag: "22.04"  # Pinned Ubuntu LTS version

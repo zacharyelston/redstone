@@ -90,7 +90,9 @@
       "id": 1,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -381,7 +383,9 @@
         "barWidth": 0.5,
         "groupWidth": 0.7,
         "legend": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "list",
           "placement": "right",
           "showLegend": true
